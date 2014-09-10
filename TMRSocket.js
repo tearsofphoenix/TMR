@@ -60,7 +60,7 @@
 				} 
 
 				var callback = pack.callback;
-				if (callback) { callback(); }
+				if (callback) { callback(null); }
 			}
 		}
 	}

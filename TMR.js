@@ -1,29 +1,6 @@
 (function() {
 	TMR = function (address) {
-		if (address) {
-			this._address = address;
-			this._socketAddress = 'ws://' + address;
-			
-			this._socket = new WebSocket(this._socketAddress, 'tmr-protocol');
-			
-			this._socket.onopen = function(event) { 
-				console.log(event);
-			} 
-			
-			this._socket.onclose = function(event) {
-			} 
-			 
-			this._socket.onmessage = function(event) { 
-				console.log(event);
-			} 
-			
-			this._socket.onerror = function(event) { 
-				
-			} 
-			
-		}else{
-			
-		}
+		this._socket = new TMRSocket('TMR', address);
 	}
 	
 	TMR.prototype.auth = function(authToken, completion, cancelCallback) {
@@ -55,8 +32,8 @@
 	}
 	
 	TMR.prototype.set = function(value, completion) {
-		console.log(this._socket);
-		this._socket.send(JSON.stringify(value));
+
+		this._socket.send(JSON.stringify(value), completion);
 	}
 	
 	TMR.prototype.update = function(value, completion) {

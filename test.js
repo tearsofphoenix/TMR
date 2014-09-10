@@ -1,6 +1,6 @@
 (function() {
-	 var socket = new TMRSocket('iOS', 'localhost:8080');
-	 console.log(socket);
-	 socket.send('info');
+	 var tmr = new TMR('localhost:8080');
+	 console.log(tmr);
+	 tmr.set({a : 'info'});
 	 
 })();
