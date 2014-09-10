@@ -36,11 +36,32 @@ wsServer.on('request', function(request) {
 
     var connection = request.accept('tmr-protocol', request.origin);
     
+    connection._data = [];
+    connection._count = 0;
+    
     console.log((new Date()) + ' Connection accepted.');
     
     connection.on('message', function(message) {
-    	console.log('recived message' + message.utf8Data);
-    	connection.sendUTF(message.utf8Data);
+    
+    	var data = message.utf8Data;
+    	if (this._count == 0) {
+	    	this._count = parseInt(data);
+	    	if (0 == this._count){
+		    	throw Error('Invalid data length');
+	    	}
+    	}else{
+	    	this._data.push(data);
+	    	if (this._data.length == this._count) {
+		    	//have received all data
+		    	//
+		    	var msg = this._data.join('');
+				console.log('recived message: ' + data);
+				this.sendUTF(data);
+				
+				this._count = 0;
+				this._data = [];
+	    	}
+    	}
     });
     
     connection.on('close', function(reasonCode, description) {

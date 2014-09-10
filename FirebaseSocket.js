@@ -1,4 +1,17 @@
-
+function Service() {
+	this._info = {}
+}
+Service.prototype.set = function(a, b) {
+	null == b ? delete this._info[a] : this._info[a] = b
+};
+Service.prototype.get = function(a) {
+	var obj = this._info[a];
+	return obj ? obj : null;
+};
+Service.prototype.remove = function(a) {
+	delete this._info[a]
+};
+	
    function _cloneObject(a) {
         var b = {},
             c;
@@ -6,6 +19,10 @@
         return b
     };
 
+	function fb_assert(e, msg) {
+		if (!e) throw Error("Firebase INTERNAL ASSERT FAILED:" + msg);
+	}
+	
     function SocketInfo() {
         this.pb = {}
     }
@@ -14,12 +31,22 @@
         return _cloneObject(this.pb)
     };
     
+	function Bc(a, b, c) {	
+		a.pb[b] += c
+	}
+	
+	function packMessage(msg, blockLength) {
+		if (msg.length <= blockLength) return [msg];
+		for (var c = [], d = 0; d < msg.length; d += blockLength) d + blockLength > msg ? c.push(msg.substring(d, msg.length)) : c.push(msg.substring(d, d + blockLength));
+		return c
+	}
+	
     var Ec = {},
         Fc = {};
 
     function _createInfoSlot(a) {
         a = a.toString();
-        Ec[a] || (Ec[a] = new Ac);
+        Ec[a] || (Ec[a] = new SocketInfo);
         return Ec[a]
     }
     
@@ -28,7 +55,13 @@
     function _defaultLogger(a) {
 
         if (FB_ENABLE_LOG) {
-			console.log(a);
+        	var args = [];
+        	var originArguments = arguments[1];
+        	for (var i=0; i<originArguments.length; ++i) {
+	        	args.push(originArguments[i]);
+        	}
+        	var str = args.join(' ');
+			console.log(a + str);
         }
     }
 
@@ -42,58 +75,60 @@
     var WebSocketIMP = null;
     "undefined" !== typeof MozWebSocket ? WebSocketIMP = MozWebSocket : "undefined" !== typeof WebSocket && (WebSocketIMP = WebSocket);
 
-    function FirebaseSocket(a, b, c) {
-        this._logPrefix = a;
+    function FirebaseSocket(logPrefix, url) {
+        this._logPrefix = logPrefix;
         this._logger = _createLogger(this._logPrefix);
         this.frames = this.vb = null;
-        this.Ha = this.Ia = this.ad = 0;
-        this.ea = _createInfoSlot(b);
-        this.Wa = (b.qc ? "wss://" : "ws://") + b.ga + "/.ws?v=5";
-        b.host !== b.ga && (this.Wa = this.Wa + "&ns=" + b.bc);
-        c && (this.Wa = this.Wa + "&s=" + c)
+        this._infoSlot = _createInfoSlot(url);
+        this._url = url;
+        this._receivedLength = 0;
+        this._sentLength = 0;
     }
     
-    var Jc;
-
-    FirebaseSocket.prototype.open = function(a, b) {
-        this.ia = b;
-        this.Wd = a;
-        this._logger("Websocket connecting to " + this.Wa);
-        this.W = new WebSocketIMP(this.Wa);
-        this._status = !1;
-        nb.set("previous_websocket_failure", !0);
+    FirebaseSocket.prototype.open = function(messageCallback, closeCallback) {
+        this._closeCallback = closeCallback;
+        this._msgCallback = messageCallback;
+        this._logger("Websocket connecting to " + this._url);
+        this._imp = new WebSocketIMP(this._url, 'tmr-protocol');
+        this._connected = false;
+        
         var c = this;
-        this.W.onopen = function() {
-            c.e("Websocket connected.");
-            c._status = !0
+        this._imp.onopen = function() {
+            c._logger("Websocket connected.");
+            c._connected = true
+            c._imp.send('hello');
         };
-        this.W.onclose = function() {
-            c.e("Websocket connection was disconnected.");
-            c.W = null;
+        this._imp.onclose = function() {
+            c._logger("Websocket connection was disconnected.");
+            c._imp = null;
             c.Pa()
         };
-        this.W.onmessage = function(a) {
-            if (null !== c.W) if (a = a.data, c.Ha += a.length, Bc(c.ea, "bytes_received", a.length), Kc(c), null !== c.frames) Lc(c, a);
-            else {
-                a: {
-                    v(null === c.frames, "We already have a frame buffer");
-                    if (6 >= a.length) {
-                        var b = Number(a);
-                        if (!isNaN(b)) {
-                            c.ad = b;
-                            c.frames = [];
-                            a = null;
-                            break a
-                        }
-                    }
-                    c.ad = 1;
-                    c.frames = []
-                }
-                null !== a && Lc(c, a)
+        this._imp.onmessage = function(a) {
+            if (null !== c.W){ 
+
+            	if (a = a.data, c._receivedLength += a.length, Bc(c._infoSlot, "bytes_received", a.length), Kc(c), null !== c.frames){
+					Lc(c, a);					
+				}else {
+	                a: {
+	                    fb_assert(null === c.frames, "We already have a frame buffer");
+	                    if (6 >= a.length) {
+	                        var b = Number(a);
+	                        if (!isNaN(b)) {
+	                            c.ad = b;
+	                            c.frames = [];
+	                            a = null;
+	                            break a
+	                        }
+	                    }
+	                    c.ad = 1;
+	                    c.frames = []
+	                }
+	                null !== a && Lc(c, a)
+	            }
             }
         };
-        this.W.onerror = function(a) {
-            c.e("WebSocket error.  Closing connection.");
+        this._imp.onerror = function(a) {
+            c._logger("WebSocket error.  Closing connection.");
             (a = a.message || a.data) && c.e(a);
             c.Pa()
         }
@@ -101,46 +136,44 @@
 
     FirebaseSocket.prototype.start = function() {};
     FirebaseSocket.isAvailable = function() {
-        var a = !1;
+        var a = false;
         if ("undefined" !== typeof navigator && navigator.userAgent) {
             var b = navigator.userAgent.match(/Android ([0-9]{0,}\.[0-9]{0,})/);
-            b && 1 < b.length && 4.4 > parseFloat(b[1]) && (a = !0)
+            b && 1 < b.length && 4.4 > parseFloat(b[1]) && (a = true)
         }
-        return !a && null !== WebSocketIMP && !Jc
+        return !a && null !== WebSocketIMP
     };
 
     FirebaseSocket.responsesRequiredToBeHealthy = 2;
     FirebaseSocket.healthyTimeout = 3E4;
     
-    FirebaseSocket.prototype.$b = function() {
-        nb.remove("previous_websocket_failure")
-    };
-
     function Lc(a, b) {
         a.frames.push(b);
         if (a.frames.length == a.ad) {
             var c = a.frames.join("");
             a.frames = null;
-            c = ra(c);
-            a.Wd(c)
+            c = JSON.parse(c);
+            a._msgCallback(c)
         }
     }
     FirebaseSocket.prototype.send = function(a) {
         Kc(this);
-        a = u(a);
-        this.Ia += a.length;
-        Bc(this.ea, "bytes_sent", a.length);
-        a = ac(a, 16384);
-        1 < a.length && this.W.send(String(a.length));
-        for (var b = 0; b < a.length; b++) this.W.send(a[b])
+        a = JSON.stringify(a);
+        this._sentLength += a.length;
+        
+        Bc(this._infoSlot, "bytes_sent", a.length);
+        
+        a = packMessage(a, 16384);
+        1 < a.length && this._imp.send(String(a.length));
+        for (var b = 0; b < a.length; b++) this._imp.send(a[b])
     };
     FirebaseSocket.prototype._clearUp = function() {
         this._hasCleared = !0;
         this._intervalID && (clearInterval(this._intervalID), this._intervalID = null);
-        this.W && (this.W.close(), this.W = null)
+        this._imp && (this._imp.close(), this._imp = null)
     };
     FirebaseSocket.prototype.Pa = function() {
-        this._hasCleared || (this._logger("WebSocket is closing itself"), this._clearUp(), this.ia && (this.ia(this._status), this.ia = null))
+        this._hasCleared || (this._logger("WebSocket is closing itself"), this._clearUp(), this._closeCallback && (this._closeCallback(this._connected), this._closeCallback = null))
     };
     FirebaseSocket.prototype.close = function() {
         this._hasCleared || (this._logger("WebSocket is being closed"), this._clearUp())
