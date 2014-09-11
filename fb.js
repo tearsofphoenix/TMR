@@ -14,7 +14,7 @@
         }
     }
 
-    function da(a) {
+    function fb_typename(a) {
         var b = typeof a;
         if ("object" == b)if (a) {
             if (a instanceof Array)return"array";
@@ -29,11 +29,11 @@
     }
 
     function isArray(a) {
-        return"array" == da(a)
+        return"array" == fb_typename(a)
     }
 
     function isArrayOrObject(a) {
-        var b = da(a);
+        var b = fb_typename(a);
         return"array" == b || "object" == b && "number" == typeof a.length
     }
 
@@ -200,7 +200,7 @@
     }
 
     function isValidFunction(a, b, c, d) {
-        if ((!d || isDefined(c)) && "function" != da(c))throw Error(y(a, b, d) + "must be a valid function.");
+        if ((!d || isDefined(c)) && "function" != fb_typename(c))throw Error(y(a, b, d) + "must be a valid function.");
     }
 
     function isValidContext(a, b, c) {
@@ -227,7 +227,7 @@
         c || (c = 0);
         d = d || [];
         if (!isDefined(b))throw Error(a + "contains undefined" + Ca(d));
-        if ("function" == da(b))throw Error(a + "contains a function" + Ca(d) + " with contents: " + b.toString());
+        if ("function" == fb_typename(b))throw Error(a + "contains a function" + Ca(d) + " with contents: " + b.toString());
         if (isInfinityNumber(b))throw Error(a + "contains " + b.toString() + Ca(d));
         if (1E3 < c)throw new TypeError(a + "contains a cyclic object value (" + d.slice(0, 100).join(".") + "...)");
         if (isString(b) && b.length > 10485760 / 3 && 10485760 < sa(b).length)throw Error(a + "contains a string greater than 10485760 utf8 bytes" + Ca(d) + " ('" + b.substring(0, 50) + "...')");
@@ -440,19 +440,18 @@
         this.value = null
     }
 
-    function Qa(a, b, c) {
+    function FBTree(a, b, c) {
         this._name = a ? a : "";
         this._parent = b ? b : null;
         this._root = c ? c : new Pa
     }
 
     function I(a, b) {
-        for (var c = b instanceof FBPath ? b : new FBPath(b), d = a, e; null !== (e = C(c));)d = new Qa(e, d, wa(d._root.children, e) || new Pa), c = Ma(c);
+        for (var c = b instanceof FBPath ? b : new FBPath(b), d = a, e; null !== (e = C(c));)d = new FBTree(e, d, wa(d._root.children, e) || new Pa), c = Ma(c);
         return d
     }
 
-    h = Qa.prototype;
-    h.j = function () {
+    FBTree.prototype.j = function () {
         return this._root.value
     };
     function J(a, b) {
@@ -461,14 +460,14 @@
         Ra(a)
     }
 
-    h.hasChildren = function () {
+    FBTree.prototype.hasChildren = function () {
         return 0 < this._root.Ac
     };
-    h.f = function () {
+    FBTree.prototype.f = function () {
         return null === this.j() && !this.hasChildren()
     };
-    h.A = function (a) {
-        for (var b in this._root.children)a(new Qa(b, this, this._root.children[b]))
+    FBTree.prototype.A = function (a) {
+        for (var b in this._root.children)a(new FBTree(b, this, this._root.children[b]))
     };
     function Sa(a, b, c, d) {
         c && !d && b(a);
@@ -486,13 +485,13 @@
         return!1
     }
 
-    h.path = function () {
+    FBTree.prototype.path = function () {
         return new FBPath(null === this._parent ? this._name : this._parent.path() + "/" + this._name)
     };
-    h.name = function () {
+    FBTree.prototype.name = function () {
         return this._name
     };
-    h.parent = function () {
+    FBTree.prototype.parent = function () {
         return this._parent
     };
     function Ra(a) {
@@ -501,7 +500,7 @@
             d && e ? (delete b._root.children[c], b._root.Ac--, Ra(b)) : d || e || (b._root.children[c] = a._root, b._root.Ac++, Ra(b))
         }
     };
-    function Ua(compator, b) {
+    function FBComp(compator, b) {
         this._comp = compator ? compator : fb_compator;
         this.ca = b ? b : kFBDefaultCallback
     }
@@ -510,21 +509,21 @@
         return a < b ? -1 : a > b ? 1 : 0
     }
 
-    h = Ua.prototype;
-    h.qa = function (a, b) {
-        return new Ua(this._comp, this.ca.qa(a, b, this._comp).J(null, null, !1, null, null))
-    };
-    h.remove = function (a) {
-        return new Ua(this._comp, this.ca.remove(a, this._comp).J(null, null, !1, null, null))
-    };
-    h.get = function (a) {
+    FBComp.prototype.qa = function (a, b) {
+        return new FBComp(this._comp, this.ca.qa(a, b, this._comp).J(null, null, !1, null, null))
+    }
+    FBComp.prototype.remove = function (a) {
+        return new FBComp(this._comp, this.ca.remove(a, this._comp).J(null, null, !1, null, null))
+    }
+    FBComp.prototype.get = function (a) {
         for (var b, c = this.ca; !c.f();) {
             b = this._comp(a, c.key);
             if (0 === b)return c.value;
             0 > b ? c = c.left : 0 < b && (c = c.right)
         }
         return null
-    };
+    }
+
     function Xa(a, b) {
         for (var c, d = a.ca, e = null; !d.f();) {
             c = a._comp(b, d.key);
@@ -538,25 +537,25 @@
         throw Error("Attempted to find predecessor key for a nonexistent key.  What gives?");
     }
 
-    h.f = function () {
+    FBComp.prototype.f = function () {
         return this.ca.f()
     };
-    h.count = function () {
+    FBComp.prototype.count = function () {
         return this.ca.count()
     };
-    h.yb = function () {
+    FBComp.prototype.yb = function () {
         return this.ca.yb()
     };
-    h.bb = function () {
+    FBComp.prototype.bb = function () {
         return this.ca.bb()
     };
-    h.Ba = function (a) {
+    FBComp.prototype.Ba = function (a) {
         return this.ca.Ba(a)
     };
-    h.Ra = function (a) {
+    FBComp.prototype.Ra = function (a) {
         return this.ca.Ra(a)
     };
-    h.ab = function (a) {
+    FBComp.prototype.ab = function (a) {
         return new Ya(this.ca, a)
     };
     function Ya(a, b) {
@@ -580,33 +579,32 @@
         this.right = null != e ? e : kFBDefaultCallback
     }
 
-    h = RBTree.prototype;
-    h.J = function (a, b, c, d, e) {
+    RBTree.prototype.J = function (a, b, c, d, e) {
         return new RBTree(null != a ? a : this.key, null != b ? b : this.value, null != c ? c : this.color, null != d ? d : this.left, null != e ? e : this.right)
     };
-    h.count = function () {
+    RBTree.prototype.count = function () {
         return this.left.count() + 1 + this.right.count()
     };
-    h.f = function () {
+    RBTree.prototype.f = function () {
         return!1
     };
-    h.Ba = function (a) {
+    RBTree.prototype.Ba = function (a) {
         return this.left.Ba(a) || a(this.key, this.value) || this.right.Ba(a)
     };
-    h.Ra = function (a) {
+    RBTree.prototype.Ra = function (a) {
         return this.right.Ra(a) || a(this.key, this.value) || this.left.Ra(a)
     };
     function cb(a) {
         return a.left.f() ? a : cb(a.left)
     }
 
-    h.yb = function () {
+    RBTree.prototype.yb = function () {
         return cb(this).key
     };
-    h.bb = function () {
+    RBTree.prototype.bb = function () {
         return this.right.f() ? this.key : this.right.bb()
     };
-    h.qa = function (a, b, c) {
+    RBTree.prototype.qa = function (a, b, c) {
         var d, e;
         e = this;
         d = c(a, e.key);
@@ -615,17 +613,17 @@
     };
     function eb(a) {
         if (a.left.f())return kFBDefaultCallback;
-        a.left.P() || a.left.left.P() || (a = fb(a));
+        a.left.color() || a.left.left.color() || (a = fb(a));
         a = a.J(null, null, null, eb(a.left), null);
         return db(a)
     }
 
-    h.remove = function (a, b) {
+    RBTree.prototype.remove = function (a, b) {
         var c, d;
         c = this;
-        if (0 > b(a, c.key))c.left.f() || c.left.P() || c.left.left.P() || (c = fb(c)), c = c.J(null, null, null, c.left.remove(a, b), null); else {
-            c.left.P() && (c = gb(c));
-            c.right.f() || c.right.P() || c.right.left.P() || (c = hb(c), c.left.left.P() && (c = gb(c), c = hb(c)));
+        if (0 > b(a, c.key))c.left.f() || c.left.color() || c.left.left.color() || (c = fb(c)), c = c.J(null, null, null, c.left.remove(a, b), null); else {
+            c.left.color() && (c = gb(c));
+            c.right.f() || c.right.color() || c.right.left.color() || (c = hb(c), c.left.left.color() && (c = gb(c), c = hb(c)));
             if (0 === b(a, c.key)) {
                 if (c.right.f())return kFBDefaultCallback;
                 d = cb(c.right);
@@ -635,19 +633,19 @@
         }
         return db(c)
     };
-    h.P = function () {
+    RBTree.prototype.color = function () {
         return this.color
     };
     function db(a) {
-        a.right.P() && !a.left.P() && (a = ib(a));
-        a.left.P() && a.left.left.P() && (a = gb(a));
-        a.left.P() && a.right.P() && (a = hb(a));
+        a.right.color() && !a.left.color() && (a = ib(a));
+        a.left.color() && a.left.left.color() && (a = gb(a));
+        a.left.color() && a.right.color() && (a = hb(a));
         return a
     }
 
     function fb(a) {
         a = hb(a);
-        a.right.left.P() && (a = a.J(null, null, null, null, gb(a.right)), a = ib(a), a = hb(a));
+        a.right.left.color() && (a = a.J(null, null, null, null, gb(a.right)), a = ib(a), a = hb(a));
         return a
     }
 
@@ -668,7 +666,7 @@
 
     FBCallback.prototype.J = function () {
         return this
-    };
+    }
     FBCallback.prototype.qa = function (a, b) {
         return new RBTree(a, b, null)
     };
@@ -693,7 +691,7 @@
     FBCallback.prototype.bb = function () {
         return null
     };
-    FBCallback.prototype.P = function () {
+    FBCallback.prototype.color = function () {
         return!1
     };
     var kFBDefaultCallback = new FBCallback;
@@ -900,7 +898,7 @@
     var Ib = Hb("Opera") || Hb("OPR"), Jb = Hb("Trident") || Hb("MSIE"), Kb = Hb("Gecko") && -1 == Eb.toLowerCase().indexOf("webkit") && !(Hb("Trident") || Hb("MSIE")), Lb = -1 != Eb.toLowerCase().indexOf("webkit");
     (function () {
         var a = "", b;
-        if (Ib && aa.opera)return a = aa.opera.version, "function" == da(a) ? a() : a;
+        if (Ib && aa.opera)return a = aa.opera.version, "function" == fb_typename(a) ? a() : a;
         Kb ? b = /rv\:([^\);]+)(\)|;)/ : Jb ? b = /\b(?:MSIE|rv)[: ]([^\);]+)(\)|;)/ : Lb && (b = /WebKit\/(\S+)/);
         b && (a = (a = b.exec(Eb)) ? a[1] : "");
         return Jb && (b = (b = aa.document) ? b.documentMode : void 0, b > parseFloat(a)) ? String(b) : a
@@ -1115,13 +1113,13 @@
         return Yb(a, b)
     };
     function FBNode(a, b) {
-        this.n = a || new Ua(nc);
+        this.n = a || new FBComp(nc);
         this._priority = "undefined" !== typeof b ? b : null
     }
 
-    h = FBNode.prototype;
+
     FBNode.prototype.O = function () {
-        return!1
+        return false;
     };
     FBNode.prototype.getPriority = function () {
         return this._priority
@@ -1212,7 +1210,7 @@
 
     function oc(a, b, c) {
         FBNode.call(this, a, c);
-        null === b && (b = new Ua(lc), a.Ba(function (a, c) {
+        null === b && (b = new FBComp(lc), a.Ba(function (a, c) {
             b = b.qa({name: a, ja: c.getPriority()}, c)
         }));
         this.va = b
@@ -1329,7 +1327,7 @@
                 return m
             }(new sc(a.length)),
             e = c ? lc : nc;
-        return null !== f ? new Ua(e, f) : new Ua(e)
+        return null !== f ? new FBComp(e, f) : new FBComp(e)
     }
 
     function fb_number_to_string(a) {
@@ -2400,7 +2398,7 @@
         this.ta = new Ld;
         this.L = new Ld;
         this.oa = new Ld;
-        this.Gb = new Qa
+        this.Gb = new FBTree
     }
 
     function Nd(a, b, c) {
@@ -2782,7 +2780,7 @@
         });
         var e = this.i;
         c = S(c, new FBPath(""));
-        var f = new Qa;
+        var f = new FBTree;
         J(I(f, this.Q.path), !0);
         b = M.ya(a, b);
         var g = this;
@@ -2803,7 +2801,7 @@
         this.u = a;
         this.g = b;
         this.ec = b.$;
-        this.na = new Qa
+        this.na = new FBTree
     }
 
     oe.prototype.Sb = function (a, b, c, d, e) {
@@ -3083,7 +3081,7 @@
         this.Bd = Hc(a, r(function () {
             return new Dc(this._info, this.u)
         }, this));
-        this.Ta = new Qa;
+        this.Ta = new FBTree;
         this.Fa = new Ld;
         this.g = new Md;
         this.I = new oe(this.u, this.g.oa);
@@ -3127,7 +3125,7 @@
             var g = a[c];
             b = Nd(this.g, g.path, g.ra) || b
         }
-        b && (d = He(this, d));
+        b && (d = rerunTransactionsUnderNode_(this, d));
         W(this.I, d, f)
     };
     FirebaseImp.prototype.fc = function (a) {
@@ -3180,12 +3178,12 @@
             "ok" !== b && fb_warning("set at " + a + " failed: " + b);
             Qd(g.g, f);
             Od(g.g, a);
-            var e = He(g, a);
+            var e = rerunTransactionsUnderNode_(g, a);
             W(g.I, e, []);
             X(d, b, c)
         });
         e = Je(this, a);
-        He(this, e);
+        rerunTransactionsUnderNode_(this, e);
         W(this.I, e, [a])
     };
     FirebaseImp.prototype.update = function (a, b, c) {
@@ -3203,12 +3201,12 @@
                 "ok" !== b && fb_warning("update at " + a + " failed: " + b);
                 Qd(t.g, k);
                 Od(t.g, a);
-                var e = He(t, a);
+                var e = rerunTransactionsUnderNode_(t, a);
                 W(t.I, e, []);
                 X(c, b, d)
             });
             b = Je(this, a);
-            He(this, b);
+            rerunTransactionsUnderNode_(this, b);
             W(t.I,
                 b, f)
         }
@@ -3220,11 +3218,11 @@
             "permission_denied" === b && fb_warning("setPriority at " + a + " failed: " + b);
             Qd(f.g, e);
             Od(f.g, a);
-            var l = He(f, a);
+            var l = rerunTransactionsUnderNode_(f, a);
             W(f.I, l, []);
             X(c, b, d)
         });
-        b = He(this, a);
+        b = rerunTransactionsUnderNode_(this, a);
         W(f.I, b, [])
     };
     function Ie(a) {
@@ -3234,7 +3232,7 @@
             var f = Ce(a.I, c, e, a.g.L);
             b.push.apply(b, a.g.set(c, f));
             f = Je(a, c);
-            He(a, f);
+            rerunTransactionsUnderNode_(a, f);
             W(a.I, f, [c])
         });
         Qd(a.g, b);
@@ -3399,7 +3397,7 @@
                 for (d = 0; d < e.length; d++)fb_safe_exec(e[d])
             } else {
                 if ("datastale" === e)for (d = 0; d < c.length; d++)c[d].status = 4 === c[d].status ? 5 : 1; else for (fb_warning("transaction at " + b + " failed: " + e), d = 0; d < c.length; d++)c[d].status = 5, c[d].wc = e;
-                e = He(a, b);
+                e = rerunTransactionsUnderNode_(a, b);
                 W(a.I, e, [b])
             }
         }, e)
@@ -3412,7 +3410,7 @@
         return a
     }
 
-    function He(a, b) {
+    function rerunTransactionsUnderNode_(a, b) {
         var c = We(a, b), d = c.path(), c = Te(a, c);
         T(a.g.oa, d, S(a.g.L, d));
         T(a.Fa, d, S(a.g.L, d));
