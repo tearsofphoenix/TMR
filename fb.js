@@ -373,7 +373,7 @@
         var d = {};
         if (b && c)d.cancel = b, isValidFunction(a, 3, d.cancel, !0), d.Y = c, isValidContext(a, 4, d.Y); else if (b)if ("object" === typeof b && null !== b)d.Y = b; else if ("function" === typeof b)d.cancel = b; else throw Error(ta.le(a, 3, !0) + "must either be a cancel callback or a context object.");
         return d
-    };
+    }
     function FBPath(a, b) {
         if (1 == arguments.length) {
             this.o = a.split("/");
@@ -441,8 +441,8 @@
     }
 
     function Qa(a, b, c) {
-        this.Da = a ? a : "";
-        this.Fb = b ? b : null;
+        this._name = a ? a : "";
+        this._parent = b ? b : null;
         this._root = c ? c : new Pa
     }
 
@@ -487,22 +487,22 @@
     }
 
     h.path = function () {
-        return new FBPath(null === this.Fb ? this.Da : this.Fb.path() + "/" + this.Da)
+        return new FBPath(null === this._parent ? this._name : this._parent.path() + "/" + this._name)
     };
     h.name = function () {
-        return this.Da
+        return this._name
     };
     h.parent = function () {
-        return this.Fb
+        return this._parent
     };
     function Ra(a) {
-        if (null !== a.Fb) {
-            var b = a.Fb, c = a.Da, d = a.f(), e = A(b._root.children, c);
+        if (null !== a._parent) {
+            var b = a._parent, c = a._name, d = a.f(), e = A(b._root.children, c);
             d && e ? (delete b._root.children[c], b._root.Ac--, Ra(b)) : d || e || (b._root.children[c] = a._root, b._root.Ac++, Ra(b))
         }
     };
     function Ua(compator, b) {
-        this.Va = compator ? compator : fb_compator;
+        this._comp = compator ? compator : fb_compator;
         this.ca = b ? b : kFBDefaultCallback
     }
 
@@ -512,14 +512,14 @@
 
     h = Ua.prototype;
     h.qa = function (a, b) {
-        return new Ua(this.Va, this.ca.qa(a, b, this.Va).J(null, null, !1, null, null))
+        return new Ua(this._comp, this.ca.qa(a, b, this._comp).J(null, null, !1, null, null))
     };
     h.remove = function (a) {
-        return new Ua(this.Va, this.ca.remove(a, this.Va).J(null, null, !1, null, null))
+        return new Ua(this._comp, this.ca.remove(a, this._comp).J(null, null, !1, null, null))
     };
     h.get = function (a) {
         for (var b, c = this.ca; !c.f();) {
-            b = this.Va(a, c.key);
+            b = this._comp(a, c.key);
             if (0 === b)return c.value;
             0 > b ? c = c.left : 0 < b && (c = c.right)
         }
@@ -527,7 +527,7 @@
     };
     function Xa(a, b) {
         for (var c, d = a.ca, e = null; !d.f();) {
-            c = a.Va(b, d.key);
+            c = a._comp(b, d.key);
             if (0 === c) {
                 if (d.left.f())return e ? e.key : null;
                 for (d = d.left; !d.right.f();)d = d.right;
@@ -572,7 +572,7 @@
         return c
     }
 
-    function $a(a, b, c, d, e) {
+    function RBTree(a, b, c, d, e) {
         this.key = a;
         this.value = b;
         this.color = null != c ? c : !0;
@@ -580,9 +580,9 @@
         this.right = null != e ? e : kFBDefaultCallback
     }
 
-    h = $a.prototype;
+    h = RBTree.prototype;
     h.J = function (a, b, c, d, e) {
-        return new $a(null != a ? a : this.key, null != b ? b : this.value, null != c ? c : this.color, null != d ? d : this.left, null != e ? e : this.right)
+        return new RBTree(null != a ? a : this.key, null != b ? b : this.value, null != c ? c : this.color, null != d ? d : this.left, null != e ? e : this.right)
     };
     h.count = function () {
         return this.left.count() + 1 + this.right.count()
@@ -670,7 +670,7 @@
         return this
     };
     FBCallback.prototype.qa = function (a, b) {
-        return new $a(a, b, null)
+        return new RBTree(a, b, null)
     };
     FBCallback.prototype.remove = function () {
         return this
@@ -1305,10 +1305,10 @@
             if (0 == l)return null;
             if (1 == l) {
                 var l = a[e].name, m = c ? a[e] : l;
-                return new $a(m, b[l], !1, null, null)
+                return new RBTree(m, b[l], !1, null, null)
             }
             var m = parseInt(l / 2, 10) + e, p = d(e, m), t = d(m + 1, f), l = a[m].name, m = c ? a[m] : l;
-            return new $a(m, b[l], !1, p, t)
+            return new RBTree(m, b[l], !1, p, t)
         }
 
         var e = c ? lc : mc;
@@ -1317,7 +1317,7 @@
                 function f(e, g) {
                     var k = p - e, t = p;
                     p -= e;
-                    var s = a[k].name, k = new $a(c ? a[k] : s, b[s], g, null, d(k + 1, t));
+                    var s = a[k].name, k = new RBTree(c ? a[k] : s, b[s], g, null, d(k + 1, t));
                     l ? l.left = k : m = k;
                     l = k
                 }
@@ -3590,7 +3590,7 @@
     function $(a, b, c) {
         this.Kb = a;
         this.X = b;
-        this.Da = c
+        this._name = c
     }
 
     $.prototype.cancel = function (a) {
@@ -3620,7 +3620,7 @@
         Aa("Firebase.onDisconnect().setWithPriority", a, !1);
         fb_check_priority("Firebase.onDisconnect().setWithPriority", 2, b, !1);
         isValidFunction("Firebase.onDisconnect().setWithPriority", 3, c, !0);
-        if (".length" === this.Da || ".keys" === this.Da)throw"Firebase.onDisconnect().setWithPriority failed: " + this.Da + " is a read-only object.";
+        if (".length" === this._name || ".keys" === this._name)throw"Firebase.onDisconnect().setWithPriority failed: " + this._name + " is a read-only object.";
         Le(this.Kb, this.X, a, b, c)
     };
 
