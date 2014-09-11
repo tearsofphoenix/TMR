@@ -5,6 +5,14 @@
 		for (var c = [], d = 0; d < msg.length; d += blockLength) d + blockLength > msg ? c.push(msg.substring(d, msg.length)) : c.push(msg.substring(d, d + blockLength));
 		return c
 	}
+	
+	var UUID = function() {
+		return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+						var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+						return v.toString(16);
+    				});
+	} 
+
 
 	TMRSocket = function (name, address) {
 	
@@ -17,7 +25,7 @@
 			this._recvLength = 0;
 			this._connected = false;		
 			this._socket = new WebSocket(this._socketAddress, 'tmr-protocol');
-			
+			this._msgCallbacks = {};
 			var dummy = this;
 			this._socket.onopen = function(event) { 
 			
@@ -34,6 +42,10 @@
 			 
 			this._socket.onmessage = function(event) { 
 				console.log(dummy._name, 'websocket received: ' + event.data);
+				var info = JSON.parse(event.data);
+				if (info) {
+					if(info.status == 0) {}
+				}
 			} 
 			
 			this._socket.onerror = function(event) { 
@@ -58,17 +70,15 @@
 				for (var b = 0; b < msg.length; b++) {
 					this._socket.send(msg[b])
 				} 
-
-				var callback = pack.callback;
-				if (callback) { callback(null); }
 			}
 		}
 	}
 	
 	TMRSocket.prototype.send = function(msg, callback) {
-	
-		var pack = {msg: JSON.stringify(msg), callback: callback};
+		var msgID = UUID();
+		var pack = {msg: JSON.stringify(msg), msgID: msgID};
 		
+		this._msgCallbacks[msgID] = callback;
 		this._sendBuffer.push(pack);
 		this._flushSendBuffer();
 	}

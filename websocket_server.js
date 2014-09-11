@@ -25,6 +25,22 @@ function originIsAllowed(origin) {
   // put logic here to detect whether the specified origin is allowed.
   return true;
 }
+var UUID = function() {
+		return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+						var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+						return v.toString(16);
+    				});
+	} 
+
+var Db = require('mongodb').Db, Connection = require('mongodb').Connection,
+  Server = require('mongodb').Server;
+
+var client = new Db('test', new Server("127.0.0.1", 27017, {}), {safe: false}); 
+client.open(function(err, p_client) {
+/*   client.collection('test_insert', test); */
+});
+
+var TMRCollectionPool = {};
 
 wsServer.on('request', function(request) {
     if (!originIsAllowed(request.origin)) {
@@ -55,7 +71,37 @@ wsServer.on('request', function(request) {
 		    	//have received all data
 		    	//
 		    	var msg = this._data.join('');
-				console.log('recived message: ' + data);
+		    	var info = JSON.parse(msg);
+				console.log('recived message: ' + msg);
+				
+		    	if (info) {
+			    	switch(info.action) {
+				    	case 'insert': {
+				    		connection.insert(info.data, function(error, docs) {
+					    		if (error) {
+						    		console.log(error);
+						    		this.sendUTF(error.toString());
+					    		}
+				    		});
+					    	break;
+				    	}
+				    	case 'collection': {
+							client.collection(info.name, function(error, collection) {
+								if(error) {
+									this.sendUTF(JSON.stringify({status: -1, error: error.toString(), msg: msg, msgID: info.msgID}) );
+								}else{
+									var uuid = UUID();
+									TMRCollectionPool[uuid] = collection;
+									this.sendUTF(JSON.stringify({status: 0, uuid: uuid, msgID: info.msgID }));
+								}
+							});				    	
+					    	break;
+				    	}
+				    	default: {
+					    	break;
+				    	}
+			    	}
+		    	}
 				this.sendUTF(data);
 				
 				this._count = 0;

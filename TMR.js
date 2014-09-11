@@ -1,6 +1,7 @@
 (function() {
 	TMR = function (address) {
 		this._socket = new TMRSocket('TMR', address);
+		this._socket.send({action: 'collection', name: 'TMR'});
 	}
 	
 	TMR.prototype.auth = function(authToken, completion, cancelCallback) {

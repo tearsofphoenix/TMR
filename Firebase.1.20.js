@@ -86,8 +86,14 @@
 
 	function la(a) {
 		a = String(a);
-		if (/^\s*$/.test(a) ? 0 : /^[\],:{}\s  ]*$/.test(a.replace(/\\["\\\/bfnrtu]/g, "@").replace(/"[^"\\\n\r  -
--]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, "]").replace(/(?:^|:|,)(?:[\s  ]*\[)+/g, ""))) try {
+		if (/^\s*$/.test(a) ? 0 : /^[\],:{}\s
+
+]*$/.test(a.replace(/\\["\\\/bfnrtu]/g, "@").replace(/"[^"\\\n\r
+
+-
+-]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, "]").replace(/(?:^|:|,)(?:[\s
+
+]*\[)+/g, ""))) try {
 			return eval("(" + a + ")")
 		} catch (b) {}
 		throw Error("Invalid JSON string: " + a);
