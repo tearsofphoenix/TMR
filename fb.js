@@ -958,10 +958,10 @@
         return isNumber(a) && (a != a || a == Number.POSITIVE_INFINITY || a == Number.NEGATIVE_INFINITY)
     }
 
-    function Wb(a) {
+    function fb_call_on_loaded(a) {
         if ("complete" === document.readyState)a(); else {
             var b = !1, c = function () {
-                document.body ? b || (b = !0, a()) : setTimeout(c, Math.floor(10))
+                document.body ? b || (b = !0, a()) : setTimeout(c, 10)
             };
             document.addEventListener ? (document.addEventListener("DOMContentLoaded", c, !1), window.addEventListener("load", c, !1)) : document.attachEvent && (document.attachEvent("onreadystatechange", function () {
                 "complete" === document.readyState && c()
@@ -975,7 +975,7 @@
 
     function Yb(a, b) {
         if (a === b)return 0;
-        var c = Zb(a), d = Zb(b);
+        var c = fb_normalize_number(a), d = fb_normalize_number(b);
         return null !== c ? null !== d ? 0 == c - d ? a.length - b.length : c - d : -1 : null !== d ? 1 : a < b ? -1 : 1
     }
 
@@ -1034,7 +1034,7 @@
 
     var gc = /^-?\d{1,10}$/;
 
-    function Zb(a) {
+    function fb_normalize_number(a) {
         return gc.test(a) && (a = Number(a), -2147483648 <= a && 2147483647 >= a) ? a : null
     }
 
@@ -1053,9 +1053,8 @@
         this._priority = "undefined" !== typeof b ? b : null
     }
 
-    h = FBLeafNode.prototype;
     FBLeafNode.prototype.O = function () {
-        return!0
+        return true
     };
     FBLeafNode.prototype.getPriority = function () {
         return this._priority
@@ -1749,7 +1748,7 @@
             c.Pa();
             c.Ja = null
         }, Math.floor(3E4));
-        Wb(function () {
+        fb_call_on_loaded(function () {
             if (!c.Ma) {
                 c.la = new Tc(function (a, b, d, k, l) {
                     Uc(c, arguments);
