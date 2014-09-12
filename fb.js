@@ -275,7 +275,7 @@
         if (!isString(b) || 0 === b.length || ya.test(b))throw Error(y(a, 1, !1) + 'was an invalid path: "' + b + '". Paths must be non-empty strings and can\'t contain ".", "#", "$", "[", or "]"');
     }
 
-    function B(a, b) {
+    function fb_check_modify_info(a, b) {
         if (".info" === C(b))throw Error(a + " failed: Can't modify data under /.info/");
     }
     function FBQuery(a, b, c, d, e, f, g) {
@@ -580,7 +580,7 @@
     }
 
     RBTree.prototype.J = function (a, b, c, d, e) {
-        return new RBTree(null != a ? a : this.key, null != b ? b : this.value, null != c ? c : this.color, null != d ? d : this.left, null != e ? e : this.right)
+        return new RBTree(null != a ? a : this.key, null != b ? b : this.value, null != c ? c : this.getColor, null != d ? d : this.left, null != e ? e : this.right)
     };
     RBTree.prototype.count = function () {
         return this.left.count() + 1 + this.right.count()
@@ -613,7 +613,7 @@
     };
     function eb(a) {
         if (a.left.f())return kFBDefaultCallback;
-        a.left.color() || a.left.left.color() || (a = fb(a));
+        a.left.getColor() || a.left.left.getColor() || (a = fb(a));
         a = a.J(null, null, null, eb(a.left), null);
         return db(a)
     }
@@ -621,9 +621,9 @@
     RBTree.prototype.remove = function (a, b) {
         var c, d;
         c = this;
-        if (0 > b(a, c.key))c.left.f() || c.left.color() || c.left.left.color() || (c = fb(c)), c = c.J(null, null, null, c.left.remove(a, b), null); else {
-            c.left.color() && (c = gb(c));
-            c.right.f() || c.right.color() || c.right.left.color() || (c = hb(c), c.left.left.color() && (c = gb(c), c = hb(c)));
+        if (0 > b(a, c.key))c.left.f() || c.left.getColor() || c.left.left.getColor() || (c = fb(c)), c = c.J(null, null, null, c.left.remove(a, b), null); else {
+            c.left.getColor() && (c = gb(c));
+            c.right.f() || c.right.getColor() || c.right.left.getColor() || (c = hb(c), c.left.left.getColor() && (c = gb(c), c = hb(c)));
             if (0 === b(a, c.key)) {
                 if (c.right.f())return kFBDefaultCallback;
                 d = cb(c.right);
@@ -633,32 +633,32 @@
         }
         return db(c)
     };
-    RBTree.prototype.color = function () {
+    RBTree.prototype.getColor = function () {
         return this.color
     };
     function db(a) {
-        a.right.color() && !a.left.color() && (a = ib(a));
-        a.left.color() && a.left.left.color() && (a = gb(a));
-        a.left.color() && a.right.color() && (a = hb(a));
+        a.right.getColor() && !a.left.getColor() && (a = ib(a));
+        a.left.getColor() && a.left.left.getColor() && (a = gb(a));
+        a.left.getColor() && a.right.getColor() && (a = hb(a));
         return a
     }
 
     function fb(a) {
         a = hb(a);
-        a.right.left.color() && (a = a.J(null, null, null, null, gb(a.right)), a = ib(a), a = hb(a));
+        a.right.left.getColor() && (a = a.J(null, null, null, null, gb(a.right)), a = ib(a), a = hb(a));
         return a
     }
 
     function ib(a) {
-        return a.right.J(null, null, a.color, a.J(null, null, !0, null, a.right.left), null)
+        return a.right.J(null, null, a.getColor, a.J(null, null, !0, null, a.right.left), null)
     }
 
     function gb(a) {
-        return a.left.J(null, null, a.color, null, a.J(null, null, !0, a.left.right, null))
+        return a.left.J(null, null, a.getColor, null, a.J(null, null, !0, a.left.right, null))
     }
 
     function hb(a) {
-        return a.J(null, null, !a.color, a.left.J(null, null, !a.left.color, null, null), a.right.J(null, null, !a.right.color, null, null))
+        return a.J(null, null, !a.getColor, a.left.J(null, null, !a.left.getColor, null, null), a.right.J(null, null, !a.right.getColor, null, null))
     }
 
     function FBCallback() {
@@ -691,7 +691,7 @@
     FBCallback.prototype.bb = function () {
         return null
     };
-    FBCallback.prototype.color = function () {
+    FBCallback.prototype.getColor = function () {
         return!1
     };
     var kFBDefaultCallback = new FBCallback;
@@ -725,7 +725,7 @@
     FBMemoryStorage.prototype.remove = function (a) {
         delete this._imp[a]
     };
-    FBMemoryStorage.prototype.od = !0;
+    FBMemoryStorage.prototype.od = true;
     function FBGetServiceByName(a) {
         try {
             if ("undefined" !== typeof window && "undefined" !== typeof window[a]) {
@@ -1065,10 +1065,10 @@
         return new FBLeafNode(this.F, a)
     };
     FBLeafNode.prototype.N = function () {
-        return M
+        return kFBGlobalNode
     };
     FBLeafNode.prototype.K = function (a) {
-        return null === C(a) ? this : M
+        return null === C(a) ? this : kFBGlobalNode
     };
     FBLeafNode.prototype.fa = function () {
         return null
@@ -1078,7 +1078,7 @@
     };
     FBLeafNode.prototype.ya = function (a, b) {
         var c = C(a);
-        return null === c ? b : this.H(c, M.ya(Ma(a), b))
+        return null === c ? b : this.H(c, kFBGlobalNode.ya(Ma(a), b))
     };
     FBLeafNode.prototype.f = function () {
         return!1
@@ -1174,7 +1174,7 @@
     };
     FBNode.prototype.N = function (a) {
         a = this.n.get(a);
-        return null === a ? M : a
+        return null === a ? kFBGlobalNode : a
     };
     FBNode.prototype.K = function (a) {
         var b = C(a);
@@ -1206,7 +1206,7 @@
         });
         return a += "}"
     };
-    var M = new FBNode;
+    var kFBGlobalNode = new FBNode;
 
     function oc(a, b, c) {
         FBNode.call(this, a, c);
@@ -1251,14 +1251,14 @@
         return this.va.f() ? null : this.va.bb().name
     };
     function O(a, b) {
-        if (null === a)return M;
+        if (null === a)return kFBGlobalNode;
         var c = null;
         "object" === typeof a && ".priority"in a ? c = a[".priority"] : "undefined" !== typeof b && (c = b);
         fb_assert(null === c || "string" === typeof c || "number" === typeof c || "object" === typeof c && ".sv"in c, "Invalid priority type found: " + typeof c);
         "object" === typeof a && ".value"in a && null !== a[".value"] && (a = a[".value"]);
         if ("object" !== typeof a || ".sv"in a)return new FBLeafNode(a, c);
         if (a instanceof Array) {
-            var d = M, e = a;
+            var d = kFBGlobalNode, e = a;
             cc(e, function (a, b) {
                 if (A(e, b) && "." !== b.substring(0, 1)) {
                     var c = O(a);
@@ -1873,7 +1873,7 @@
             var a = this;
             setTimeout(function () {
                 null !== a.Z && (document.body.removeChild(a.Z), a.Z = null)
-            }, Math.floor(0))
+            }, 0)
         }
         var b = this.onDisconnect;
         b && (this.onDisconnect = null, b())
@@ -1980,7 +1980,7 @@
         a.Na = !1;
         setTimeout(function () {
             a.B && a.B.open(c, d)
-        }, Math.floor(0));
+        }, 0);
         b = b.healthyTimeout || 0;
         0 < b && (a.Yb = setTimeout(function () {
             a.Yb = null;
@@ -2219,7 +2219,7 @@
         a.sendRequest_(b, c, function (a) {
             e && setTimeout(function () {
                 e(a.s, a.d)
-            }, Math.floor(0))
+            }, 0)
         })
     }
 
@@ -2380,7 +2380,7 @@
         })
     };
     function Ld() {
-        this.$ = M
+        this.$ = kFBGlobalNode
     }
 
     function S(a, b) {
@@ -2422,7 +2422,7 @@
     function Pd(a, b, c) {
         if (c.f())return a;
         if (null !== c.j())return b;
-        a = a || M;
+        a = a || kFBGlobalNode;
         c.A(function (d) {
             d = d.name();
             var e = a.N(d), f = b.N(d), g = I(c, d), e = Pd(e, f, g);
@@ -2602,7 +2602,7 @@
 
     function ee(a, b, c, d) {
         var e, f = [];
-        c === d ? e = !1 : c.O() && d.O() ? e = c.j() !== d.j() : c.O() ? (fe(a, b, M, d, f), e = !0) : d.O() ? (fe(a, b, c, M, f), e = !0) : e = fe(a, b, c, d, f);
+        c === d ? e = !1 : c.O() && d.O() ? e = c.j() !== d.j() : c.O() ? (fe(a, b, kFBGlobalNode, d, f), e = !0) : d.O() ? (fe(a, b, c, kFBGlobalNode, f), e = !0) : e = fe(a, b, c, d, f);
         e ? a.Mc(b, d, f) : c.getPriority() !== d.getPriority() && a.Mc(b, d, null);
         return e
     }
@@ -2627,8 +2627,8 @@
             }
             if (!g && f)return!0
         }
-        for (g = 0; g < l.length; g++)if (t = l[g])c = b.child(t.key), ee(a, c, t.value, M), e.push(new U("child_removed", t.value, t.key));
-        for (g = 0; g < k.length; g++)if (t = k[g])c = b.child(t.key), l = d.fa(t.key, t.value), ee(a, c, M, t.value), e.push(new U("child_added", t.value, t.key, l));
+        for (g = 0; g < l.length; g++)if (t = l[g])c = b.child(t.key), ee(a, c, t.value, kFBGlobalNode), e.push(new U("child_removed", t.value, t.key));
+        for (g = 0; g < k.length; g++)if (t = k[g])c = b.child(t.key), l = d.fa(t.key, t.value), ee(a, c, kFBGlobalNode, t.value), e.push(new U("child_added", t.value, t.key, l));
         for (g = 0; g < m.length; g++)t = m[g].Gc, k = m[g].$c, c = b.child(k.key), l = d.fa(k.key, k.value), e.push(new U("child_moved", k.value, k.key, l)), (c = ee(a, c, t.value, k.value)) &&
             p.push(k);
         for (g = 0; g < p.length; g++)a = p[g], l = d.fa(a.key, a.value), e.push(new U("child_changed", a.value, a.key, l));
@@ -2683,7 +2683,7 @@
     };
     function le(a, b) {
         Xd.call(this, a);
-        this.i = M;
+        this.i = kFBGlobalNode;
         this.mc(b, Zd(b))
     }
 
@@ -2771,7 +2771,7 @@
     }
 
     le.prototype.hasChild = function (a) {
-        return this.i.N(a) !== M
+        return this.i.N(a) !== kFBGlobalNode
     };
     le.prototype.rb = function (a, b, c) {
         var d = {};
@@ -2782,7 +2782,7 @@
         c = S(c, new FBPath(""));
         var f = new FBTree;
         J(I(f, this.Q.path), !0);
-        b = M.ya(a, b);
+        b = kFBGlobalNode.ya(a, b);
         var g = this;
         de(c, b, a, f, function (a, b, c) {
             null !== c && a.toString() === g.Q.path.toString() && g.mc(b, c)
@@ -3015,10 +3015,10 @@
     function Ae(a, b, c, d, e) {
         var f = b.path();
         b = a.rb(f, b, d, e);
-        var g = M, k = [];
+        var g = kFBGlobalNode, k = [];
         cc(b, function (b, m) {
             var p = new FBPath(m);
-            3 === b || 1 === b ? g = g.H(m, d.K(p)) : (2 === b && k.push({path: f.child(m), ra: M}), k = k.concat(Be(a, d.K(p), I(c, p), e)))
+            3 === b || 1 === b ? g = g.H(m, d.K(p)) : (2 === b && k.push({path: f.child(m), ra: kFBGlobalNode}), k = k.concat(Be(a, d.K(p), I(c, p), e)))
         });
         return[
             {path: f, ra: g}
@@ -3047,7 +3047,7 @@
                         ];
                         break a
                     }
-                    2 === f && g.push({path: b, ra: M})
+                    2 === f && g.push({path: b, ra: kFBGlobalNode})
                 }
                 f = e;
                 e = e.parent()
@@ -3068,7 +3068,7 @@
         ] : Ae(a, e, c, b, d);
         var f = [];
         c.A(function (c) {
-            var e = b.O() ? M : b.N(c.name());
+            var e = b.O() ? kFBGlobalNode : b.N(c.name());
             c = Be(a, e, c, d);
             f = f.concat(c)
         });
@@ -3100,13 +3100,13 @@
     FirebaseImp.prototype.name = function () {
         return this.M.bc
     };
-    function Fe(a) {
+    function fb_get_servertime_offset(a) {
         a = S(a.Jc, new FBPath(".info/serverTimeOffset")).val() || 0;
         return(new Date).getTime() + a
     }
 
-    function Ge(a) {
-        a = a = {timestamp: Fe(a)};
+    function fb_get_timestamp(a) {
+        a = {timestamp: fb_get_servertime_offset(a)};
         a.timestamp = a.timestamp || (new Date).getTime();
         return a
     }
@@ -3171,7 +3171,7 @@
     };
     FirebaseImp.prototype.setWithPriority = function (a, b, c, d) {
         this._logger("set", {path: a.toString(), value: b, ja: c});
-        var e = Ge(this);
+        var e = fb_get_timestamp(this);
         b = O(b, c);
         var e = Td(b, e), e = Ce(this.I, a, e, this.g.L), f = this.g.set(a, e), g = this;
         this.u.put(a.toString(), b.val(!0), function (b, c) {
@@ -3188,7 +3188,7 @@
     };
     FirebaseImp.prototype.update = function (a, b, c) {
         this._logger("update", {path: a.toString(), value: b});
-        var d = S(this.g.oa, a), e = !0, f = [], g = Ge(this), k = [], l;
+        var d = S(this.g.oa, a), e = !0, f = [], g = fb_get_timestamp(this), k = [], l;
         for (l in b) {
             var e = !1, m = O(b[l]), m = Td(m, g), d = d.H(l, m), p = a.child(l);
             f.push(p);
@@ -3213,7 +3213,7 @@
     };
     FirebaseImp.prototype.setPriority = function (a, b, c) {
         this._logger("setPriority", {path: a.toString(), ja: b});
-        var d = Ge(this), d = Rd(b, d), d = S(this.g.L, a).copy(d), d = Ce(this.I, a, d, this.g.L), e = this.g.set(a, d), f = this;
+        var d = fb_get_timestamp(this), d = Rd(b, d), d = S(this.g.L, a).copy(d), d = Ce(this.I, a, d, this.g.L), e = this.g.set(a, d), f = this;
         this.u.put(a.toString() + "/.priority", b, function (b, d) {
             "permission_denied" === b && fb_warning("setPriority at " + a + " failed: " + b);
             Qd(f.g, e);
@@ -3227,7 +3227,7 @@
     };
     function Ie(a) {
         a._logger("onDisconnectEvents");
-        var b = [], c = Ge(a);
+        var b = [], c = fb_get_timestamp(a);
         Kd(Sd(a.S, c), new FBPath(""), function (c, e) {
             var f = Ce(a.I, c, e, a.g.L);
             b.push.apply(b, a.g.set(c, f));
@@ -3289,7 +3289,7 @@
                 c = this.g;
                 d = a.path;
                 for (var e = [], f = 0; f < b.length; ++f)e[f] = S(c.ta, b[f]);
-                T(c.ta, d, M);
+                T(c.ta, d, kFBGlobalNode);
                 for (f = 0; f < b.length; ++f)T(c.ta, b[f], e[f]);
                 c = Od(c, d)
             }
@@ -3352,7 +3352,7 @@
             k.push(c);
             J(e, k);
             k = "object" === typeof d && null !== d && A(d, ".priority") ? d[".priority"] : S(a.g.L, b).getPriority();
-            e = Ge(a);
+            e = fb_get_timestamp(a);
             d = O(d, k);
             d = Td(d, e);
             T(a.Fa, b, d);
@@ -3429,7 +3429,7 @@
                         c[k].yc && (f = f.ya(l, w))
                     } else m = !0, p = "nodata"
                 }
-                m && (c[k].status = 3, setTimeout(c[k].vc, Math.floor(0)), c[k].D && (m = new Firebase(a, c[k].path), l = new FBDataSnapshot(e.K(l), m), "nodata" === p ? g.push(r(c[k].D, null, null, !1, l)) : g.push(r(c[k].D, null, Error(p), !1, l))))
+                m && (c[k].status = 3, setTimeout(c[k].vc, 0), c[k].D && (m = new Firebase(a, c[k].path), l = new FBDataSnapshot(e.K(l), m), "nodata" === p ? g.push(r(c[k].D, null, null, !1, l)) : g.push(r(c[k].D, null, Error(p), !1, l))))
             }
             T(a.Fa, d, e);
             T(a.g.oa, d, f);
@@ -3558,11 +3558,11 @@
     FirebaseInternal.ConnectionTarget = ConnectionTarget;
 
     FirebaseInternal.forceLongPolling = function () {
-        Rc = Jc = !0
+        Rc = Jc = true
     };
 
     FirebaseInternal.forceWebSockets = function () {
-        Sc = !0
+        Sc = true
     };
 
     FirebaseInternal.setSecurityDebugCallback = function (a, b) {
@@ -3599,14 +3599,14 @@
 
     $.prototype.remove = function (a) {
         fb_check_args("Firebase.onDisconnect().remove", 0, 1, arguments.length);
-        B("Firebase.onDisconnect().remove", this.X);
+        fb_check_modify_info("Firebase.onDisconnect().remove", this.X);
         isValidFunction("Firebase.onDisconnect().remove", 1, a, !0);
         Ke(this.Kb, this.X, null, a)
     };
 
     $.prototype.set = function (a, b) {
         fb_check_args("Firebase.onDisconnect().set", 1, 2, arguments.length);
-        B("Firebase.onDisconnect().set", this.X);
+        fb_check_modify_info("Firebase.onDisconnect().set", this.X);
         Aa("Firebase.onDisconnect().set", a, !1);
         isValidFunction("Firebase.onDisconnect().set", 2, b, !0);
         Ke(this.Kb, this.X, a, b)
@@ -3614,7 +3614,7 @@
 
     $.prototype.setWithPriority = function (a, b, c) {
         fb_check_args("Firebase.onDisconnect().setWithPriority", 2, 3, arguments.length);
-        B("Firebase.onDisconnect().setWithPriority", this.X);
+        fb_check_modify_info("Firebase.onDisconnect().setWithPriority", this.X);
         Aa("Firebase.onDisconnect().setWithPriority", a, !1);
         fb_check_priority("Firebase.onDisconnect().setWithPriority", 2, b, !1);
         isValidFunction("Firebase.onDisconnect().setWithPriority", 3, c, !0);
@@ -3624,7 +3624,7 @@
 
     $.prototype.update = function (a, b) {
         fb_check_args("Firebase.onDisconnect().update", 1, 2, arguments.length);
-        B("Firebase.onDisconnect().update", this.X);
+        fb_check_modify_info("Firebase.onDisconnect().update", this.X);
         if (isArray(a)) {
             for (var c = {}, d = 0; d < a.length; ++d)c["" + d] = a[d];
             a = c;
@@ -3744,7 +3744,7 @@
 
     Firebase.prototype.set = function (a, b) {
         fb_check_args("Firebase.set", 1, 2, arguments.length);
-        B("Firebase.set", this.path);
+        fb_check_modify_info("Firebase.set", this.path);
         Aa("Firebase.set", a, !1);
         isValidFunction("Firebase.set", 2, b, !0);
         this.m.setWithPriority(this.path, a, null, b)
@@ -3752,7 +3752,7 @@
 
     Firebase.prototype.update = function (a, b) {
         fb_check_args("Firebase.update", 1, 2, arguments.length);
-        B("Firebase.update", this.path);
+        fb_check_modify_info("Firebase.update", this.path);
         if (isArray(a)) {
             for (var c = {}, d = 0; d < a.length; ++d)c["" + d] = a[d];
             a = c;
@@ -3766,7 +3766,7 @@
 
     Firebase.prototype.setWithPriority = function (a, b, c) {
         fb_check_args("Firebase.setWithPriority", 2, 3, arguments.length);
-        B("Firebase.setWithPriority", this.path);
+        fb_check_modify_info("Firebase.setWithPriority", this.path);
         Aa("Firebase.setWithPriority", a, !1);
         fb_check_priority("Firebase.setWithPriority", 2, b, !1);
         isValidFunction("Firebase.setWithPriority", 3, c, !0);
@@ -3776,14 +3776,14 @@
 
     Firebase.prototype.remove = function (a) {
         fb_check_args("Firebase.remove", 0, 1, arguments.length);
-        B("Firebase.remove", this.path);
+        fb_check_modify_info("Firebase.remove", this.path);
         isValidFunction("Firebase.remove", 1, a, !0);
         this.set(null, a)
     };
 
     Firebase.prototype.transaction = function (a, b, c) {
         fb_check_args("Firebase.transaction", 1, 3, arguments.length);
-        B("Firebase.transaction", this.path);
+        fb_check_modify_info("Firebase.transaction", this.path);
         isValidFunction("Firebase.transaction", 1, a, !1);
         isValidFunction("Firebase.transaction", 2, b, !0);
         if (isDefined(c) && "boolean" != typeof c)throw Error(y("Firebase.transaction", 3, !0) + "must be a boolean.");
@@ -3794,7 +3794,7 @@
 
     Firebase.prototype.setPriority = function (a, b) {
         fb_check_args("Firebase.setPriority", 1, 2, arguments.length);
-        B("Firebase.setPriority", this.path);
+        fb_check_modify_info("Firebase.setPriority", this.path);
         fb_check_priority("Firebase.setPriority", 1, a, !1);
         isValidFunction("Firebase.setPriority", 2, b, !0);
         this.m.setPriority(this.path, a, b)
@@ -3802,10 +3802,10 @@
 
     Firebase.prototype.push = function (a, b) {
         fb_check_args("Firebase.push", 0, 2, arguments.length);
-        B("Firebase.push", this.path);
+        fb_check_modify_info("Firebase.push", this.path);
         Aa("Firebase.push", a, !0);
         isValidFunction("Firebase.push", 2, b, !0);
-        var c = Fe(this.m), c = Ze(c), c = this.child(c);
+        var c = fb_get_servertime_offset(this.m), c = Ze(c), c = this.child(c);
         "undefined" !== typeof a && null !== a && c.set(a, b);
         return c
     };
