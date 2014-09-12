@@ -50,7 +50,7 @@
         return"object" == b && null != a || "function" == b
     }
 
-    function ia(a, b, c) {
+    function fb_native_call(a, b, c) {
         return a.call.apply(a.bind, arguments)
     }
 
@@ -70,7 +70,7 @@
     }
 
     function r(a, b, c) {
-        r = Function.prototype.bind && -1 != Function.prototype.bind.toString().indexOf("native code") ? ia : ja;
+        r = Function.prototype.bind && -1 != Function.prototype.bind.toString().indexOf("native code") ? fb_native_call : ja;
         return r.apply(null, arguments)
     }
 
@@ -161,7 +161,7 @@
         return a
     }
 
-    function sa(a) {
+    function stringToASCIIArray(a) {
         for (var b = [], c = 0, d = 0; d < a.length; d++) {
             var e = a.charCodeAt(d);
             55296 <= e && 56319 >= e && (e -= 55296, d++, fb_assert(d < a.length, "Surrogate pair missing trail surrogate."), e = 65536 + (e << 10) + (a.charCodeAt(d) - 56320));
@@ -178,7 +178,7 @@
         if (e)throw Error(a + " failed: Was called with " + d + (1 === d ? " argument." : " arguments.") + " Expects " + e + ".");
     }
 
-    function y(a, b, c) {
+    function errorPrefix_(a, b, c) {
         var d = "";
         switch (b) {
             case 1:
@@ -200,27 +200,27 @@
     }
 
     function isValidFunction(a, b, c, d) {
-        if ((!d || isDefined(c)) && "function" != fb_typename(c))throw Error(y(a, b, d) + "must be a valid function.");
+        if ((!d || isDefined(c)) && "function" != fb_typename(c))throw Error(errorPrefix_(a, b, d) + "must be a valid function.");
     }
 
     function isValidContext(a, b, c) {
-        if (isDefined(c) && (!isObjectOrFunction(c) || null === c))throw Error(y(a, b, !0) + "must be a valid context object.");
+        if (isDefined(c) && (!isObjectOrFunction(c) || null === c))throw Error(errorPrefix_(a, b, !0) + "must be a valid context object.");
     };
     function A(a, b) {
         return Object.prototype.hasOwnProperty.call(a, b)
     }
 
-    function wa(a, b) {
+    function fb_getProperty(a, b) {
         if (Object.prototype.hasOwnProperty.call(a, b))return a[b]
     };
     var ua = {}, xa = /[\[\].#$\/\u0000-\u001F\u007F]/, ya = /[\[\].#$\u0000-\u001F\u007F]/;
 
-    function za(a) {
+    function isValidString(a) {
         return isString(a) && 0 !== a.length && !xa.test(a)
     }
 
     function Aa(a, b, c) {
-        c && !isDefined(b) || Ba(y(a, 1, c), b)
+        c && !isDefined(b) || Ba(errorPrefix_(a, 1, c), b)
     }
 
     function Ba(a, b, c, d) {
@@ -230,11 +230,10 @@
         if ("function" == fb_typename(b))throw Error(a + "contains a function" + Ca(d) + " with contents: " + b.toString());
         if (isInfinityNumber(b))throw Error(a + "contains " + b.toString() + Ca(d));
         if (1E3 < c)throw new TypeError(a + "contains a cyclic object value (" + d.slice(0, 100).join(".") + "...)");
-        if (isString(b) && b.length > 10485760 / 3 && 10485760 < sa(b).length)throw Error(a + "contains a string greater than 10485760 utf8 bytes" + Ca(d) + " ('" + b.substring(0, 50) + "...')");
-        if (isObjectOrFunction(b))for (var e in b)if (A(b,
-            e)) {
+        if (isString(b) && b.length > 10485760 / 3 && 10485760 < stringToASCIIArray(b).length)throw Error(a + "contains a string greater than 10485760 utf8 bytes" + Ca(d) + " ('" + b.substring(0, 50) + "...')");
+        if (isObjectOrFunction(b))for (var e in b)if (A(b, e)) {
             var f = b[e];
-            if (".priority" !== e && ".value" !== e && ".sv" !== e && !za(e))throw Error(a + " contains an invalid key (" + e + ")" + Ca(d) + '.  Keys must be non-empty strings and can\'t contain ".", "#", "$", "/", "[", or "]"');
+            if (".priority" !== e && ".value" !== e && ".sv" !== e && !isValidString(e))throw Error(a + " contains an invalid key (" + e + ")" + Ca(d) + '.  Keys must be non-empty strings and can\'t contain ".", "#", "$", "/", "[", or "]"');
             d.push(e);
             Ba(a, f, c + 1, d);
             d.pop()
@@ -246,12 +245,12 @@
     }
 
     function fb_check_object(a, b) {
-        if (!isObjectOrFunction(b) || isArray(b))throw Error(y(a, 1, !1) + " must be an Object containing the children to replace.");
+        if (!isObjectOrFunction(b) || isArray(b))throw Error(errorPrefix_(a, 1, !1) + " must be an Object containing the children to replace.");
         Aa(a, b, !1)
     }
 
     function fb_check_priority(a, b, c, d) {
-        if (!(d && !isDefined(c) || null === c || isNumber(c) || isString(c) || isObjectOrFunction(c) && A(c, ".sv")))throw Error(y(a, b, d) + "must be a valid firebase priority (a string, number, or null).");
+        if (!(d && !isDefined(c) || null === c || isNumber(c) || isString(c) || isObjectOrFunction(c) && A(c, ".sv")))throw Error(errorPrefix_(a, b, d) + "must be a valid firebase priority (a string, number, or null).");
     }
 
     function fb_check_msg_type(a, b, c) {
@@ -263,16 +262,16 @@
             case "child_moved":
                 break;
             default:
-                throw Error(y(a, 1, c) + 'must be a valid event type: "value", "child_added", "child_removed", "child_changed", or "child_moved".');
+                throw Error(errorPrefix_(a, 1, c) + 'must be a valid event type: "value", "child_added", "child_removed", "child_changed", or "child_moved".');
         }
     }
 
     function fb_check_key(a, b) {
-        if (isDefined(b) && !za(b))throw Error(y(a, 2, !0) + 'was an invalid key: "' + b + '".  Firebase keys must be non-empty strings and can\'t contain ".", "#", "$", "/", "[", or "]").');
+        if (isDefined(b) && !isValidString(b))throw Error(errorPrefix_(a, 2, !0) + 'was an invalid key: "' + b + '".  Firebase keys must be non-empty strings and can\'t contain ".", "#", "$", "/", "[", or "]").');
     }
 
     function fb_check_path(a, b) {
-        if (!isString(b) || 0 === b.length || ya.test(b))throw Error(y(a, 1, !1) + 'was an invalid path: "' + b + '". Paths must be non-empty strings and can\'t contain ".", "#", "$", "[", or "]"');
+        if (!isString(b) || 0 === b.length || ya.test(b))throw Error(errorPrefix_(a, 1, !1) + 'was an invalid path: "' + b + '". Paths must be non-empty strings and can\'t contain ".", "#", "$", "[", or "]"');
     }
 
     function fb_check_modify_info(a, b) {
@@ -447,7 +446,7 @@
     }
 
     function I(a, b) {
-        for (var c = b instanceof FBPath ? b : new FBPath(b), d = a, e; null !== (e = C(c));)d = new FBTree(e, d, wa(d._root.children, e) || new Pa), c = Ma(c);
+        for (var c = b instanceof FBPath ? b : new FBPath(b), d = a, e; null !== (e = C(c));)d = new FBTree(e, d, fb_getProperty(d._root.children, e) || new Pa), c = Ma(c);
         return d
     }
 
@@ -1479,23 +1478,23 @@
         return b
     }
 
-    function zc(a) {
+    function fb_clone(a) {
         var b = {}, c;
         for (c in a)b[c] = a[c];
         return b
     };
-    function Ac() {
+    function FBInfo() {
         this.pb = {}
     }
 
-    function Bc(a, b, c) {
+    function fb_save_info_slot(a, b, c) {
         isDefined(c) || (c = 1);
         A(a.pb, b) || (a.pb[b] = 0);
         a.pb[b] += c
     }
 
-    Ac.prototype.get = function () {
-        return zc(this.pb)
+    FBInfo.prototype.get = function () {
+        return fb_clone(this.pb)
     };
     function Cc(a) {
         this.Id = a;
@@ -1503,7 +1502,7 @@
     }
 
     Cc.prototype.get = function () {
-        var a = this.Id.get(), b = zc(a);
+        var a = this.Id.get(), b = fb_clone(a);
         if (this.Zb)for (var c in this.Zb)b[c] -= this.Zb[c];
         this.Zb = a;
         return b
@@ -1526,7 +1525,7 @@
 
     function fb_create_info_slot(a) {
         a = a.toString();
-        Ec[a] || (Ec[a] = new Ac);
+        Ec[a] || (Ec[a] = new FBInfo);
         return Ec[a]
     }
 
@@ -1568,7 +1567,7 @@
             c.Pa()
         };
         this._imp.onmessage = function (a) {
-            if (null !== c._imp)if (a = a.data, c.Ha += a.length, Bc(c._info, "bytes_received", a.length), Kc(c), null !== c.frames)Lc(c, a); else {
+            if (null !== c._imp)if (a = a.data, c.Ha += a.length, fb_save_info_slot(c._info, "bytes_received", a.length), Kc(c), null !== c.frames)Lc(c, a); else {
                 a:{
                     fb_assert(null === c.frames, "We already have a frame buffer");
                     if (6 >= a.length) {
@@ -1622,7 +1621,7 @@
         Kc(this);
         a = u(a);
         this.Ia += a.length;
-        Bc(this._info, "bytes_sent", a.length);
+        fb_save_info_slot(this._info, "bytes_sent", a.length);
         a = ac(a, 16384);
         1 < a.length && this._imp.send(String(a.length));
         for (var b = 0; b < a.length; b++)this._imp.send(a[b])
@@ -1811,8 +1810,8 @@
     FBLongPoll.prototype.send = function (a) {
         a = u(a);
         this.Ia += a.length;
-        Bc(this._info, "bytes_sent", a.length);
-        a = sa(a);
+        fb_save_info_slot(this._info, "bytes_sent", a.length);
+        a = stringToASCIIArray(a);
         if (!isArrayOrObject(a))throw Error("encodeByteArray takes an array as a parameter");
         if (!Mb) {
             Mb = {};
@@ -1831,7 +1830,7 @@
     function Uc(a, b) {
         var c = u(b).length;
         a.Ha += c;
-        Bc(a._info, "bytes_received", c)
+        fb_save_info_slot(a._info, "bytes_received", c)
     }
 
     function Tc(a, b, c, d) {
@@ -2164,7 +2163,7 @@
             } catch (k) {
                 K("isAdminAuthToken_ failed", k)
             }
-            b = "object" === typeof d && !0 === wa(d, "admin")
+            b = "object" === typeof d && !0 === fb_getProperty(d, "admin")
         }
         b && (this._logger("Admin auth credential detected.  Reducing max reconnect time."), this.ac =
             3E4)
@@ -2615,8 +2614,8 @@
         for (H = Za(V); null !== G || null !== H;) {
             c = H;
             c = null === G ? 1 : null === c ? -1 : G.key === c.key ? 0 : lc({name: G.key, ja: G.value.getPriority()}, {name: c.key, ja: c.value.getPriority()});
-            if (0 > c)f = wa(t, G.key), isDefined(f) ? (m.push({Gc: G, $c: k[f]}), k[f] = null) : (s[G.key] = l.length, l.push(G)), f = !0, G = Za(w); else {
-                if (0 < c)f = wa(s, H.key), isDefined(f) ? (m.push({Gc: l[f], $c: H}), l[f] = null) : (t[H.key] = k.length, k.push(H)), f = !0; else {
+            if (0 > c)f = fb_getProperty(t, G.key), isDefined(f) ? (m.push({Gc: G, $c: k[f]}), k[f] = null) : (s[G.key] = l.length, l.push(G)), f = !0, G = Za(w); else {
+                if (0 < c)f = fb_getProperty(s, H.key), isDefined(f) ? (m.push({Gc: l[f], $c: H}), l[f] = null) : (t[H.key] = k.length, k.push(H)), f = !0; else {
                     c = b.child(H.key);
                     if (c = ee(a, c, G.value,
                         H.value))p.push(H), f = !0;
@@ -2999,7 +2998,7 @@
     oe.prototype.rb = function (a, b, c, d) {
         function e(a) {
             cc(a, function (a, b) {
-                f[b] = 3 === a ? 3 : (wa(f, b) || a) === a ? a : 3
+                f[b] = 3 === a ? 3 : (fb_getProperty(f, b) || a) === a ? a : 3
             })
         }
 
@@ -3040,7 +3039,7 @@
                         break a
                     }
                     k = a.rb(b, k, c, d);
-                    f = wa(k, f.name());
+                    f = fb_getProperty(k, f.name());
                     if (3 === f || 1 === f) {
                         e = [
                             {path: b, ra: c}
@@ -3275,7 +3274,7 @@
     }
 
     function Ne(a) {
-        Bc(a._info, "deprecated_on_disconnect");
+        fb_save_info_slot(a._info, "deprecated_on_disconnect");
         a.Bd.Zc.deprecated_on_disconnect = !0
     }
 
@@ -3315,7 +3314,7 @@
         }
     };
     FirebaseImp.prototype.statsIncrementCounter = function (a) {
-        Bc(this._info, a);
+        fb_save_info_slot(this._info, a);
         this.Bd.Zc[a] = !0
     };
     FirebaseImp.prototype._logger = function () {
@@ -3689,11 +3688,11 @@
             c = new ConnectionTarget(c, f, d, "ws" === l || "wss" === l);
             d = new FBPath(g);
             f = d.toString();
-            !(l = !isString(c.host) || 0 === c.host.length || !za(c.bc)) && (l = 0 !== f.length) && (f && (f = f.replace(/^\/*\.info(\/|$)/, "/")), l = !(isString(f) && 0 !== f.length && !ya.test(f)));
-            if (l)throw Error(y("new Firebase", 1, !1) + 'must be a valid firebase URL and the path can\'t contain ".", "#", "$", "[", or "]".');
+            !(l = !isString(c.host) || 0 === c.host.length || !isValidString(c.bc)) && (l = 0 !== f.length) && (f && (f = f.replace(/^\/*\.info(\/|$)/, "/")), l = !(isString(f) && 0 !== f.length && !ya.test(f)));
+            if (l)throw Error(errorPrefix_("new Firebase", 1, !1) + 'must be a valid firebase URL and the path can\'t contain ".", "#", "$", "[", or "]".');
             if (b)if (b instanceof FBContext)f = b; else throw Error("Expected a valid Firebase.Context for second argument to new Firebase()"); else f = FBContext.sharedInstance();
             l = c.toString();
-            e = wa(f.ib, l);
+            e = fb_getProperty(f.ib, l);
             e || (e = new FirebaseImp(c), f.ib[l] = e);
             c = e
         }
@@ -3786,7 +3785,7 @@
         fb_check_modify_info("Firebase.transaction", this.path);
         isValidFunction("Firebase.transaction", 1, a, !1);
         isValidFunction("Firebase.transaction", 2, b, !0);
-        if (isDefined(c) && "boolean" != typeof c)throw Error(y("Firebase.transaction", 3, !0) + "must be a boolean.");
+        if (isDefined(c) && "boolean" != typeof c)throw Error(errorPrefix_("Firebase.transaction", 3, !0) + "must be a boolean.");
         if (".length" === this.name() || ".keys" === this.name())throw"Firebase.transaction failed: " + this.name() + " is a read-only object.";
         "undefined" === typeof c && (c = !0);
         Oe(this.m, this.path, a, b, c)
@@ -3828,7 +3827,7 @@
 
     Firebase.prototype.auth = function (a, b, c) {
         fb_check_args("Firebase.auth", 1, 3, arguments.length);
-        if (!isString(a))throw Error(y("Firebase.auth", 1, !1) + "must be a valid credential (a string).");
+        if (!isString(a))throw Error(errorPrefix_("Firebase.auth", 1, !1) + "must be a valid credential (a string).");
         isValidFunction("Firebase.auth", 2, b, !0);
         isValidFunction("Firebase.auth", 3, b, !0);
         this.m.auth(a, b, c)
