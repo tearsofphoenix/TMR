@@ -14,6 +14,10 @@
         throw Error(msg);
     }
 
+    function tmr_assert(a, msg) {
+        if (!(a)){ tmr_throw_error(msg ? msg : 'Expression should be true!') }
+    }
+
     function tmr_check_event_type(type) {
         switch (type) {
             case 'value':
@@ -43,7 +47,7 @@
     };
 
 
-     function TMRSocket(name, address) {
+     function TMRSocket(name, address, observer) {
 
         if (address) {
             this._name = name;
@@ -55,7 +59,7 @@
             this._connected = false;
             this._socket = new WebSocket(this._socketAddress, 'tmr-protocol');
             this._msgCallbacks = {};
-            this._observers = {};
+            this._observer = observer;
 
             var dummy = this;
             this._socket.onopen = function(event) {
@@ -77,51 +81,7 @@
 
                 var info = JSON.parse(event.data);
                 if (info) {
-                    var error = info.error;
-                    var msgID = info.msgID;
-                    var action = info.action;
-
-                    switch(action) {
-                        case 'set': {
-                            var msgCallback = dummy._msgCallbacks[msgID];
-
-                            if (msgCallback) {
-                                msgCallback(error ? error : null);
-                            }
-                            break;
-                        }
-                        case 'value': {
-                            var observers = dummy._observers[action];
-                            if (observers && observers.length > 0) {
-                                if (error) {
-                                    observers.forEach(function(vLooper) {
-                                        vLooper._triggerCallback(info);
-                                    })
-                                }else{
-                                    observers.forEach(function(vLooper) {
-                                        vLooper._triggerCancelCallback(info);
-                                    })
-                                }
-                            }
-
-                            break;
-                        }
-                        case 'child_added': {
-                            break;
-                        }
-                        case 'child_changed': {
-                            break;
-                        }
-                        case 'child_removed': {
-                            break;
-                        }
-                        case 'child_moved': {
-                            break;
-                        }
-                        default : {
-                            break;
-                        }
-                    }
+                    this._observer._dispatchInfo(info);
                 }
             };
 
@@ -176,12 +136,17 @@
         this._children = [];
     };
 
-    function TMRQueryImp(tmr, callback, cancelCallback, context) {
+    function TMRQueryImp(tmr, once, eventType, callback, cancelCallback, context) {
+
+        tmr_assert(tmr);
+
         this._ref = tmr;
-        this._updateSettings(callback, cancelCallback, context);
+        this._once = once;
+        this._updateSettings(eventType, callback, cancelCallback, context);
     };
 
     TMRQueryImp.prototype._updateSettings = function(eventType, callback, cancelCallback, context) {
+        this._eventType = eventType;
         this._callback = callback;
         this._cancelCallback = cancelCallback;
         this._context = context;
@@ -193,10 +158,6 @@
 
     TMRQueryImp.prototype._triggerCancelCallback = function(info){
         this._cancelCallback(info, this._context);
-    };
-
-    TMRQueryImp.prototype.off = function(eventType, callback, context) {
-
     };
 
     TMRQueryImp.prototype.once = function(eventType, successCallback, failureCallback, context) {
@@ -221,9 +182,41 @@
 
 
     function TMRImp(address) {
-        this._socket = new TMRSocket('TMR', address);
+        this._socket = new TMRSocket('TMR', address, this);
         this._socket.send({action: 'collection', name: 'TMR'});
         this._queryObservers = {};
+    };
+
+    TMRImp.prototype._dispatchInfo = function(info) {
+
+        var error = info.error;
+        var msgID = info.msgID;
+        var action = info.action;
+
+        switch(action) {
+            case 'set': {
+                 break;
+            }
+            case 'value': {
+
+                break;
+            }
+            case 'child_added': {
+                break;
+            }
+            case 'child_changed': {
+                break;
+            }
+            case 'child_removed': {
+                break;
+            }
+            case 'child_moved': {
+                break;
+            }
+            default : {
+                break;
+            }
+        }
     };
 
     TMRImp.prototype.auth = function(authToken, completion, cancelCallback) {
@@ -295,7 +288,7 @@
     TMRImp.prototype.on = function(eventType, callback, cancelCallback, context) {
 
         var queries = this._queryObservers[eventType];
-        var query = new TMRQueryImp(this, eventType, callback, cancelCallback, context);
+        var query = new TMRQueryImp(this, false, eventType, callback, cancelCallback, context);
 
         if (!queries) {
             queries = [];
