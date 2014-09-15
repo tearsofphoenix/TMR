@@ -277,7 +277,7 @@
     function fb_check_modify_info(a, b) {
         if (".info" === C(b))throw Error(a + " failed: Can't modify data under /.info/");
     }
-    function FBQuery(a, b, c, d, e, f, g) {
+    function FirebaseObject(a, b, c, d, e, f, g) {
         this.m = a;
         this.path = b;
         this.Ca = c;
@@ -288,12 +288,12 @@
         if (isDefined(this.da) && isDefined(this.Aa) && isDefined(this.Ca))throw"Query: Can't combine startAt(), endAt(), and limit().";
     }
 
-    FBQuery.prototype.ref = function () {
+    FirebaseObject.prototype.ref = function () {
         fb_check_args("Query.ref", 0, 0, arguments.length);
         return new Firebase(this.m, this.path)
     };
 
-    FBQuery.prototype.on = function (a, b) {
+    FirebaseObject.prototype.on = function (a, b) {
         fb_check_args("Query.on", 2, 4, arguments.length);
         fb_check_msg_type("Query.on", a, !1);
         isValidFunction("Query.on", 2, b, !1);
@@ -302,7 +302,7 @@
         return b
     };
 
-    FBQuery.prototype.off = function (a, b, c) {
+    FirebaseObject.prototype.off = function (a, b, c) {
         fb_check_args("Query.off", 0, 3, arguments.length);
         fb_check_msg_type("Query.off", a, !0);
         isValidFunction("Query.off", 2, b, !0);
@@ -310,7 +310,7 @@
         this.m.oc(this, a, b, c)
     };
 
-    FBQuery.prototype.once = function (a, b) {
+    FirebaseObject.prototype.once = function (a, b) {
         function c(g) {
             f && (f = !1, e.off(a, c), b.call(d.Y, g))
         }
@@ -325,28 +325,28 @@
         })
     };
 
-    FBQuery.prototype.limit = function (a) {
+    FirebaseObject.prototype.limit = function (a) {
         fb_check_args("Query.limit", 1, 1, arguments.length);
         if (!isNumber(a) || Math.floor(a) !== a || 0 >= a)throw"Query.limit: First argument must be a positive integer.";
-        return new FBQuery(this.m, this.path, a, this.da, this.wa, this.Aa, this.Ya)
+        return new FirebaseObject(this.m, this.path, a, this.da, this.wa, this.Aa, this.Ya)
     };
 
-    FBQuery.prototype.startAt = function (a, b) {
+    FirebaseObject.prototype.startAt = function (a, b) {
         fb_check_args("Query.startAt", 0, 2, arguments.length);
         fb_check_priority("Query.startAt", 1, a, !0);
         fb_check_key("Query.startAt", b);
         isDefined(a) || (b = a = null);
-        return new FBQuery(this.m, this.path, this.Ca, a, b, this.Aa, this.Ya)
+        return new FirebaseObject(this.m, this.path, this.Ca, a, b, this.Aa, this.Ya)
     };
 
-    FBQuery.prototype.endAt = function (a, b) {
+    FirebaseObject.prototype.endAt = function (a, b) {
         fb_check_args("Query.endAt", 0, 2, arguments.length);
         fb_check_priority("Query.endAt", 1, a, !0);
         fb_check_key("Query.endAt", b);
-        return new FBQuery(this.m, this.path, this.Ca, this.da, this.wa, a, b)
+        return new FirebaseObject(this.m, this.path, this.Ca, this.da, this.wa, a, b)
     };
 
-    FBQuery.prototype.euqalTo = function (a, b) {
+    FirebaseObject.prototype.euqalTo = function (a, b) {
         fb_check_args("Query.equalTo", 1, 2, arguments.length);
         fb_check_priority("Query.equalTo", 1, a, !1);
         fb_check_key("Query.equalTo", b);
@@ -364,7 +364,7 @@
         return b
     }
 
-    FBQuery.prototype.queryIdentifier = function () {
+    FirebaseObject.prototype.queryIdentifier = function () {
         var a = La(Ka(this));
         return"{}" === a ? "default" : a
     };
@@ -1958,7 +1958,7 @@
         this.Cb = d;
         this.S = e;
         this.Oc = f;
-        this.M = b;
+        this._url = b;
         this.ic = [];
         this.cd = 0;
         this.Cd = new $c(b);
@@ -1969,10 +1969,10 @@
 
     function ed(a) {
         var b = cd(a.Cd);
-        a.B = new b("c:" + a.id + ":" + a.cd++, a.M);
+        a.B = new b("c:" + a.id + ":" + a.cd++, a._url);
         a.Tc = b.responsesRequiredToBeHealthy || 0;
         var c = fd(a, a.B), d = gd(a, a.B);
-        a.Pb = a.B;
+        a._socket = a.B;
         a.Mb = a.B;
         a.w = null;
         a.Na = !1;
@@ -1989,7 +1989,7 @@
 
     function gd(a, b) {
         return function (c) {
-            b === a.B ? (a.B = null, c || 0 !== a.ma ? 1 === a.ma && a._logger("Realtime connection lost.") : (a._logger("Realtime connection failed."), "s-" === a.M.ga.substr(0, 2) && (FBLocalStorage.remove("host:" + a.M.host), a.M.ga = a.M.host)), a.close()) : b === a.w ? (a._logger("Secondary connection lost."), c = a.w, a.w = null, a.Pb !== c && a.Mb !== c || a.close()) : a._logger("closing an old connection")
+            b === a.B ? (a.B = null, c || 0 !== a.ma ? 1 === a.ma && a._logger("Realtime connection lost.") : (a._logger("Realtime connection failed."), "s-" === a._url.ga.substr(0, 2) && (FBLocalStorage.remove("host:" + a._url.host), a._url.ga = a._url.host)), a.close()) : b === a.w ? (a._logger("Secondary connection lost."), c = a.w, a.w = null, a._socket !== c && a.Mb !== c || a.close()) : a._logger("closing an old connection")
         }
     }
 
@@ -2002,7 +2002,7 @@
                     if (d = $b("t", c), "d"in c)if (c = c.d, "h" === d) {
                         var d = c.ts, e = c.v, f = c.h;
                         a.sc = c.s;
-                        qb(a.M, f);
+                        qb(a._url, f);
                         0 == a.ma && (a.B.start(), hd(a, a.B, d), "5" !== e && fb_warning("Protocol version mismatch detected"), c = a.Cd, (c = 1 < c.Ob.length ? c.Ob[1] : null) && id(a, c))
                     } else if ("n" === d) {
                         a._logger("recvd end transmission on primary");
@@ -2011,9 +2011,9 @@
                         a.ic = [];
                         jd(a)
                     } else"s" === d ? (a._logger("Connection shutdown command received. Shutting down..."),
-                        a.Oc && (a.Oc(c), a.Oc = null), a.S = null, a.close()) : "r" === d ? (a._logger("Reset packet received.  New host: " + c), qb(a.M, c), 1 === a.ma ? a.close() : (FBShutdownAllConnections(a), ed(a))) : "e" === d ? fb_log_error("Server Error: " + c) : "o" === d ? (a._logger("got pong on primary."), ld(a), fb_send_ping(a)) : fb_log_error("Unknown control packet command: " + d)
+                        a.Oc && (a.Oc(c), a.Oc = null), a.S = null, a.close()) : "r" === d ? (a._logger("Reset packet received.  New host: " + c), qb(a._url, c), 1 === a.ma ? a.close() : (FBShutdownAllConnections(a), ed(a))) : "e" === d ? fb_log_error("Server Error: " + c) : "o" === d ? (a._logger("got pong on primary."), ld(a), fb_send_ping(a)) : fb_log_error("Unknown control packet command: " + d)
                 } else"d" == d && a.gc(c)
-            } else if (b === a.w)if (d = $b("t", c), c = $b("d", c), "c" == d)"t"in c && (c = c.t, "a" === c ? nd(a) : "r" === c ? (a._logger("Got a reset on secondary, closing it"), a.w.close(), a.Pb !== a.w && a.Mb !== a.w || a.close()) : "o" === c && (a._logger("got pong on secondary."),
+            } else if (b === a.w)if (d = $b("t", c), c = $b("d", c), "c" == d)"t"in c && (c = c.t, "a" === c ? nd(a) : "r" === c ? (a._logger("Got a reset on secondary, closing it"), a.w.close(), a._socket !== a.w && a.Mb !== a.w || a.close()) : "o" === c && (a._logger("got pong on secondary."),
                 a.xd--, nd(a))); else if ("d" == d)a.ic.push(c); else throw Error("Unknown protocol layer: " + d); else a._logger("message on old connection")
         }
     }
@@ -2022,11 +2022,11 @@
         od(this, {t: "d", d: a})
     };
     function jd(a) {
-        a.Pb === a.w && a.Mb === a.w && (a._logger("cleaning up and promoting a connection: " + a.w._logPrefix), a.B = a.w, a.w = null)
+        a._socket === a.w && a.Mb === a.w && (a._logger("cleaning up and promoting a connection: " + a.w._logPrefix), a.B = a.w, a.w = null)
     }
 
     function nd(a) {
-        0 >= a.xd ? (a._logger("Secondary connection is healthy."), a.Na = !0, a.w.$b(), a.w.start(), a._logger("sending client ack on secondary"), a.w.send({t: "c", d: {t: "a", d: {}}}), a._logger("Ending transmission on primary"), a.B.send({t: "c", d: {t: "n", d: {}}}), a.Pb = a.w, jd(a)) : (a._logger("sending ping on secondary."), a.w.send({t: "c", d: {t: "p", d: {}}}))
+        0 >= a.xd ? (a._logger("Secondary connection is healthy."), a.Na = !0, a.w.$b(), a.w.start(), a._logger("sending client ack on secondary"), a.w.send({t: "c", d: {t: "a", d: {}}}), a._logger("Ending transmission on primary"), a.B.send({t: "c", d: {t: "n", d: {}}}), a._socket = a.w, jd(a)) : (a._logger("sending ping on secondary."), a.w.send({t: "c", d: {t: "p", d: {}}}))
     }
 
     RealTimeConnection.prototype.gc = function (a) {
@@ -2038,7 +2038,7 @@
     }
 
     function id(a, b) {
-        a.w = new b("c:" + a.id + ":" + a.cd++, a.M, a.sc);
+        a.w = new b("c:" + a.id + ":" + a.cd++, a._url, a.sc);
         a.xd = b.responsesRequiredToBeHealthy || 0;
         a.w.open(fd(a, a.w), gd(a, a.w));
         setTimeout(function () {
@@ -2062,7 +2062,7 @@
 
     function od(a, b) {
         if (1 !== a.ma)throw"Connection is not connected";
-        a.Pb.send(b)
+        a._socket.send(b)
     }
 
     RealTimeConnection.prototype.close = function () {
@@ -2090,7 +2090,7 @@
         this.Ab = d || ba;
         this.Qc = e || ba;
         this.Hc = f || ba;
-        this.M = a;
+        this._url = a;
         this.Vc = null;
         this.Lb = {};
         this.ce = 0;
@@ -2101,7 +2101,7 @@
     }
 
     var qd = 0, sd = 0;
-    h = FBDataConnection.prototype;
+
     FBDataConnection.prototype.sendRequest_ = function (a, b, c) {
         var d = ++this.ce;
         a = {r: d, a: a, b: b};
@@ -2306,8 +2306,8 @@
             a.Lc = (new Date).getTime();
             a.wb = null;
             var b = r(a.gc, a), c = r(a.Cb, a), d = r(a.qd, a), e = a.id + ":" + sd++;
-            a.ka = new RealTimeConnection(e, a.M, b, c, d, function (b) {
-                fb_warning(b + " (" + a.M.toString() + ")");
+            a.ka = new RealTimeConnection(e, a._url, b, c, d, function (b) {
+                fb_warning(b + " (" + a._url.toString() + ")");
                 a.Sa = !1
             })
         }
@@ -3073,9 +3073,9 @@
         return f
     };
     function FirebaseImp(a) {
-        this.M = a;
+        this._url = a;
         this._info = fb_create_info_slot(a);
-        this.u = new FBDataConnection(this.M, r(this.hc, this), r(this.fc, this), r(this.Ab, this), r(this.Qc, this), r(this.Hc, this));
+        this.u = new FBDataConnection(this._url, r(this.hc, this), r(this.fc, this), r(this.Ab, this), r(this.Qc, this), r(this.Hc, this));
         this.Bd = Hc(a, r(function () {
             return new Dc(this._info, this.u)
         }, this));
@@ -3093,10 +3093,10 @@
 
     h = FirebaseImp.prototype;
     FirebaseImp.prototype.toString = function () {
-        return(this.M.qc ? "https://" : "http://") + this.M.host
+        return(this._url.qc ? "https://" : "http://") + this._url.host
     };
     FirebaseImp.prototype.name = function () {
-        return this.M.bc
+        return this._url.bc
     };
     function fb_get_servertime_offset(a) {
         a = S(a.Jc, new FBPath(".info/serverTimeOffset")).val() || 0;
@@ -3150,7 +3150,7 @@
     }
 
     FirebaseImp.prototype.auth = function (a, b, c) {
-        "firebaseio-demo.com" === this.M.domain && fb_warning("FirebaseRef.auth() not supported on demo (*.firebaseio-demo.com) Firebases. Please use on production (*.firebaseio.com) Firebases only.");
+        "firebaseio-demo.com" === this._url.domain && fb_warning("FirebaseRef.auth() not supported on demo (*.firebaseio-demo.com) Firebases. Please use on production (*.firebaseio.com) Firebases only.");
         this.u.auth(a, function (a, c) {
             X(b, a, c)
         }, function (a, b) {
@@ -3696,10 +3696,10 @@
             c = e
         }
 
-        FBQuery.call(this, c, d)
+        FirebaseObject.call(this, c, d)
     }
 
-    ka(Firebase, FBQuery);
+    ka(Firebase, FirebaseObject);
     aa.Firebase = Firebase;
 
     Firebase.prototype.name = function () {
@@ -3858,4 +3858,16 @@
     Firebase.SDK_VERSION = "1.0.21";
     Firebase.INTERNAL = FirebaseInternal;
     Firebase.Context = FBContext;
+})();
+
+(function(){
+    // CREATE A REFERENCE TO FIREBASE
+    var messagesRef = new Firebase('https://oznachak0jk.firebaseio-demo.com/');
+
+    // Add a callback that is triggered for each chat message.
+    messagesRef.limit(10).on('child_added', function (snapshot) {
+        //GET DATA
+        var data = snapshot.val();
+        console.log(data);
+    });
 })();
