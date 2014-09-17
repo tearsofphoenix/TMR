@@ -275,7 +275,7 @@
     }
 
     function fb_check_modify_info(a, b) {
-        if (".info" === C(b))throw Error(a + " failed: Can't modify data under /.info/");
+        if (".info" === fb_safe_get_subpath(b))throw Error(a + " failed: Can't modify data under /.info/");
     }
     function FirebaseObject(a, b, c, d, e, f, g) {
         this.m = a;
@@ -375,59 +375,59 @@
     }
     function FBPath(a, b) {
         if (1 == arguments.length) {
-            this.o = a.split("/");
-            for (var c = 0, d = 0; d < this.o.length; d++)0 < this.o[d].length && (this.o[c] = this.o[d], c++);
-            this.o.length = c;
-            this.U = 0
-        } else this.o = a, this.U = b
+            this._subpaths = a.split("/");
+            for (var c = 0, d = 0; d < this._subpaths.length; d++)0 < this._subpaths[d].length && (this._subpaths[c] = this._subpaths[d], c++);
+            this._subpaths.length = c;
+            this._level = 0
+        } else this._subpaths = a, this._level = b
     }
 
-    function C(a) {
-        return a.U >= a.o.length ? null : a.o[a.U]
+    function fb_safe_get_subpath(a) {
+        return a._level >= a._subpaths.length ? null : a._subpaths[a._level]
     }
 
-    function Ma(a) {
-        var b = a.U;
-        b < a.o.length && b++;
-        return new FBPath(a.o, b)
+    function fb_next_level_path(a) {
+        var b = a._level;
+        b < a._subpaths.length && b++;
+        return new FBPath(a._subpaths, b)
     }
 
     function Na(a) {
-        return a.U < a.o.length ? a.o[a.o.length - 1] : null
+        return a._level < a._subpaths.length ? a._subpaths[a._subpaths.length - 1] : null
     }
 
     FBPath.prototype.toString = function () {
-        for (var a = "", b = this.U; b < this.o.length; b++)"" !== this.o[b] && (a += "/" + this.o[b]);
+        for (var a = "", b = this._level; b < this._subpaths.length; b++)"" !== this._subpaths[b] && (a += "/" + this._subpaths[b]);
         return a || "/"
     };
     FBPath.prototype.parent = function () {
-        if (this.U >= this.o.length)return null;
-        for (var a = [], b = this.U; b < this.o.length - 1; b++)a.push(this.o[b]);
+        if (this._level >= this._subpaths.length)return null;
+        for (var a = [], b = this._level; b < this._subpaths.length - 1; b++)a.push(this._subpaths[b]);
         return new FBPath(a, 0)
     };
     FBPath.prototype.child = function (a) {
-        for (var b = [], c = this.U; c < this.o.length; c++)b.push(this.o[c]);
-        if (a instanceof FBPath)for (c = a.U; c < a.o.length; c++)b.push(a.o[c]); else for (a = a.split("/"), c = 0; c < a.length; c++)0 < a[c].length && b.push(a[c]);
+        for (var b = [], c = this._level; c < this._subpaths.length; c++)b.push(this._subpaths[c]);
+        if (a instanceof FBPath)for (c = a._level; c < a._subpaths.length; c++)b.push(a._subpaths[c]); else for (a = a.split("/"), c = 0; c < a.length; c++)0 < a[c].length && b.push(a[c]);
         return new FBPath(b, 0)
     };
     FBPath.prototype.f = function () {
-        return this.U >= this.o.length
+        return this._level >= this._subpaths.length
     };
     FBPath.prototype.length = function () {
-        return this.o.length - this.U
+        return this._subpaths.length - this._level
     };
     function Oa(a, b) {
-        var c = C(a);
+        var c = fb_safe_get_subpath(a);
         if (null === c)return b;
-        if (c === C(b))return Oa(Ma(a), Ma(b));
+        if (c === fb_safe_get_subpath(b))return Oa(fb_next_level_path(a), fb_next_level_path(b));
         throw"INTERNAL ERROR: innerPath (" + b + ") is not within outerPath (" + a + ")";
     }
 
     FBPath.prototype.contains = function (a) {
-        var b = this.U, c = a.U;
+        var b = this._level, c = a._level;
         if (this.length() > a.length())return!1;
-        for (; b < this.o.length;) {
-            if (this.o[b] !== a.o[c])return!1;
+        for (; b < this._subpaths.length;) {
+            if (this._subpaths[b] !== a._subpaths[c])return!1;
             ++b;
             ++c
         }
@@ -446,7 +446,7 @@
     }
 
     function I(a, b) {
-        for (var c = b instanceof FBPath ? b : new FBPath(b), d = a, e; null !== (e = C(c));)d = new FBTree(e, d, fb_getProperty(d._root.children, e) || new Pa), c = Ma(c);
+        for (var c = b instanceof FBPath ? b : new FBPath(b), d = a, e; null !== (e = fb_safe_get_subpath(c));)d = new FBTree(e, d, fb_getProperty(d._root.children, e) || new Pa), c = fb_next_level_path(c);
         return d
     }
 
@@ -922,6 +922,7 @@
     var Qb = null, Rb = !0;
 
     function K(a) {
+        console.log(Pb.apply(null, arguments));
         !0 === Rb && (Rb = !1, null === Qb && !0 === FBSessionStorage.get("logging_enabled") && fb_is_log_enabled(!0));
         if (Qb) {
             var b = Pb.apply(null, arguments);
@@ -1066,7 +1067,7 @@
         return kFBGlobalNode
     };
     FBLeafNode.prototype.K = function (a) {
-        return null === C(a) ? this : kFBGlobalNode
+        return null === fb_safe_get_subpath(a) ? this : kFBGlobalNode
     };
     FBLeafNode.prototype.fa = function () {
         return null
@@ -1075,8 +1076,8 @@
         return(new FBNode).H(a, b).copy(this._priority)
     };
     FBLeafNode.prototype.ya = function (a, b) {
-        var c = C(a);
-        return null === c ? b : this.H(c, kFBGlobalNode.ya(Ma(a), b))
+        var c = fb_safe_get_subpath(a);
+        return null === c ? b : this.H(c, kFBGlobalNode.ya(fb_next_level_path(a), b))
     };
     FBLeafNode.prototype.f = function () {
         return!1
@@ -1132,9 +1133,9 @@
         return b && null !== b.getPriority() ? new oc(c, null, this._priority) : new FBNode(c, this._priority)
     };
     FBNode.prototype.ya = function (a, b) {
-        var c = C(a);
+        var c = fb_safe_get_subpath(a);
         if (null === c)return b;
-        var d = this.N(c).ya(Ma(a), b);
+        var d = this.N(c).ya(fb_next_level_path(a), b);
         return this.H(c, d)
     };
     FBNode.prototype.f = function () {
@@ -1175,8 +1176,8 @@
         return null === a ? kFBGlobalNode : a
     };
     FBNode.prototype.K = function (a) {
-        var b = C(a);
-        return null === b ? this : this.N(b).K(Ma(a))
+        var b = fb_safe_get_subpath(a);
+        return null === b ? this : this.N(b).K(fb_next_level_path(a))
     };
     FBNode.prototype.fa = function (a) {
         return Xa(this.n, a)
@@ -1736,7 +1737,7 @@
         }
     }
 
-    var Rc, Sc;
+    var Rc, kFBForeceWebSocket;
     FBLongPoll.prototype.open = function (a, b) {
         this.dd = 0;
         this.S = b;
@@ -1789,7 +1790,7 @@
         document.body.appendChild(this.eb)
     };
     FBLongPoll.isAvailable = function () {
-        return!Sc && !("object" === typeof window && window.chrome && window.chrome.extension && !/^chrome/.test(window.location.href)) && !("object" === typeof Windows && "object" === typeof Windows.je) && (Rc || !0)
+        return!kFBForeceWebSocket && !("object" === typeof window && window.chrome && window.chrome.extension && !/^chrome/.test(window.location.href)) && !("object" === typeof Windows && "object" === typeof Windows.je) && (Rc || !0)
     };
     h = FBLongPoll.prototype;
     FBLongPoll.prototype.$b = function () {
@@ -2343,10 +2344,10 @@
     function Id(a, b, c) {
         if (b.f())a.F = c, a.n = null; else if (null !== a.F)a.F = a.F.ya(b, c); else {
             null == a.n && (a.n = new Pc);
-            var d = C(b);
+            var d = fb_safe_get_subpath(b);
             a.n.contains(d) || a.n.add(d, new Hd);
             a = a.n.get(d);
-            b = Ma(b);
+            b = fb_next_level_path(b);
             Id(a, b, c)
         }
     }
@@ -2362,7 +2363,7 @@
             });
             return Jd(a, b)
         }
-        return null !== a.n ? (c = C(b), b = Ma(b), a.n.contains(c) && Jd(a.n.get(c), b) && a.n.remove(c), a.n.f() ? (a.n = null, !0) : !1) : !0
+        return null !== a.n ? (c = fb_safe_get_subpath(b), b = fb_next_level_path(b), a.n.contains(c) && Jd(a.n.get(c), b) && a.n.remove(c), a.n.f() ? (a.n = null, !0) : !1) : !0
     }
 
     function Kd(a, b, c) {
@@ -3278,10 +3279,10 @@
     }
 
     FirebaseImp.prototype.Sb = function (a, b, c, d, e) {
-        ".info" === C(a.path) ? this.Kc.Sb(a, b, c, d, e) : this.I.Sb(a, b, c, d, e)
+        ".info" === fb_safe_get_subpath(a.path) ? this.Kc.Sb(a, b, c, d, e) : this.I.Sb(a, b, c, d, e)
     };
     FirebaseImp.prototype.oc = function (a, b, c, d) {
-        if (".info" === C(a.path))this.Kc.oc(a, b, c, d); else {
+        if (".info" === fb_safe_get_subpath(a.path))this.Kc.oc(a, b, c, d); else {
             b = this.I.oc(a, b, c, d);
             if (c = null !== b) {
                 c = this.g;
@@ -3439,7 +3440,7 @@
     }
 
     function We(a, b) {
-        for (var c, d = a.Ta; null !== (c = C(b)) && null === d.j();)d = I(d, c), b = Ma(b);
+        for (var c, d = a.Ta; null !== (c = fb_safe_get_subpath(b)) && null === d.j();)d = I(d, c), b = fb_next_level_path(b);
         return d
     }
 
@@ -3560,7 +3561,7 @@
     };
 
     FirebaseInternal.forceWebSockets = function () {
-        Sc = true
+        kFBForeceWebSocket = true
     };
 
     FirebaseInternal.setSecurityDebugCallback = function (a, b) {
@@ -3634,7 +3635,7 @@
             this.X, a, b)
     };
 
-    var Ze = function () {
+    var fb_encode_timestamp = function () {
         var a = 0, b = [];
         return function (c) {
             var d = c === a;
@@ -3709,7 +3710,7 @@
 
     Firebase.prototype.child = function (a) {
         fb_check_args("Firebase.child", 1, 1, arguments.length);
-        if (isNumber(a))a = String(a); else if (!(a instanceof FBPath))if (null === C(this.path)) {
+        if (isNumber(a))a = String(a); else if (!(a instanceof FBPath))if (null === fb_safe_get_subpath(this.path)) {
             var b = a;
             b && (b = b.replace(/^\/*\.info(\/|$)/, "/"));
             fb_check_path("Firebase.child", b)
@@ -3803,7 +3804,11 @@
         fb_check_modify_info("Firebase.push", this.path);
         Aa("Firebase.push", a, !0);
         isValidFunction("Firebase.push", 2, b, !0);
-        var c = fb_get_servertime_offset(this.m), c = Ze(c), c = this.child(c);
+        var c = fb_get_servertime_offset(this.m);
+        console.log(c);
+        c = fb_encode_timestamp(c);
+        console.log(c);
+        c = this.child(c);
         "undefined" !== typeof a && null !== a && c.set(a, b);
         return c
     };
@@ -3850,7 +3855,7 @@
         fb_assert(!b || !0 === a || !1 === a, "Can't turn on custom loggers persistently.");
         !0 === a ? ("undefined" !== typeof console && ("function" === typeof console.log ? Qb = r(console.log, console) : "object" === typeof console.log && (Qb = function (a) {
             console.log(a)
-        })), b && FBSessionStorage.set("logging_enabled", !0)) : a ? Qb = a : (Qb = null, FBSessionStorage.remove("logging_enabled"))
+        })), b && FBSessionStorage.set("logging_enabled", true)) : a ? Qb = a : (Qb = null, FBSessionStorage.remove("logging_enabled"))
     }
 
     Firebase.enableLogging = fb_is_log_enabled;
@@ -3860,14 +3865,14 @@
     Firebase.Context = FBContext;
 })();
 
-(function(){
-    // CREATE A REFERENCE TO FIREBASE
-    var messagesRef = new Firebase('https://oznachak0jk.firebaseio-demo.com/');
-
-    // Add a callback that is triggered for each chat message.
-    messagesRef.limit(10).on('child_added', function (snapshot) {
-        //GET DATA
-        var data = snapshot.val();
-        console.log(data);
-    });
-})();
+//(function(){
+//    // CREATE A REFERENCE TO FIREBASE
+//    var messagesRef = new Firebase('https://oznachak0jk.firebaseio-demo.com/');
+//
+//    // Add a callback that is triggered for each chat message.
+//    messagesRef.limit(10).on('child_added', function (snapshot) {
+//        //GET DATA
+//        var data = snapshot.val();
+//        console.log(data);
+//    });
+//})();
