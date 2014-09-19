@@ -42,8 +42,9 @@
             /*   client.collection('test_insert', test); */
         });
 
+        var dummyServer = this;
         this._socketServer.on('request', function(request) {
-            if (!this.originIsAllowed(request.origin)) {
+            if (!dummyServer.originIsAllowed(request.origin)) {
                 // Make sure we only accept requests from an allowed origin
                 request.reject();
                 console.log((new Date()) + ' Connection from origin ' + request.origin + ' rejected.');
@@ -57,10 +58,10 @@
 
             console.log((new Date()) + ' Connection accepted.');
 
-            var dummy = this;
             connection.on('message', function(message) {
 
                 var data = message.utf8Data;
+                console.log(data);
                 if (connection._count == 0) {
                     connection._count = parseInt(data);
                     if (0 == connection._count){
@@ -80,7 +81,7 @@
                                     connection.insert(info.data, function(error, docs) {
                                         if (error) {
                                             console.log(error);
-                                            dummy._socketServer.sendUTF(error.toString());
+                                            dummyServer._socketServer.sendUTF(error.toString());
                                         }
                                     });
                                     break;
@@ -88,11 +89,11 @@
                                 case 'collection': {
                                     client.collection(info.name, function(error, collection) {
                                         if(error) {
-                                            dummy._socketServer.sendUTF(JSON.stringify({status: -1, error: error.toString(), msg: msg, msgID: info.msgID}) );
+                                            dummyServer._socketServer.sendUTF(JSON.stringify({status: -1, error: error.toString(), msg: msg, msgID: info.msgID}) );
                                         }else{
                                             var uuid = UUID();
                                             TMRCollectionPool[uuid] = collection;
-                                            dummy._socketServer.sendUTF(JSON.stringify({status: 0, uuid: uuid, msgID: info.msgID }));
+                                            dummyServer._socketServer.sendUTF(JSON.stringify({status: 0, uuid: uuid, msgID: info.msgID }));
                                         }
                                     });
                                     break;
@@ -117,7 +118,7 @@
     }
 
     TMRServer.prototype.originIsAllowed = function(origin) {
-        console.log(request.origin);
+        console.log(origin);
         return true;
     };
 
