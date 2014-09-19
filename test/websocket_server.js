@@ -25,12 +25,14 @@ function originIsAllowed(origin) {
   // put logic here to detect whether the specified origin is allowed.
   return true;
 }
+
+//@return string
 var UUID = function() {
 		return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
 						var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
 						return v.toString(16);
     				});
-	} 
+	};
 
 var Db = require('mongodb').Db, Connection = require('mongodb').Connection,
   Server = require('mongodb').Server;
